@@ -45,7 +45,8 @@ function parseGeminiJson(text: string): ExtractedReport {
   return parsed as ExtractedReport;
 }
 
-const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+// gemini-2.0-flash הוצא משימוש (404) — משתמשים במודלים עדכניים
+const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
 
 async function callGemini(
   base64: string,
@@ -92,6 +93,10 @@ export async function extractReportFromImage(
     if (!response.ok) {
       if (response.status === 400 || response.status === 403) {
         throw new Error('מפתח API לא תקין — בדוק בהגדרות');
+      }
+      if (response.status === 404) {
+        lastError = `מודל ${model} לא זמין — מנסה מודל אחר...`;
+        continue;
       }
       lastError = `שגיאת Gemini (${model}): ${response.status}`;
       continue;

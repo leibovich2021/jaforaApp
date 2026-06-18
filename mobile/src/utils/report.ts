@@ -1,13 +1,6 @@
 import { ExtractedReport, TruckTransfers } from '../types';
 import { fmtAvgBoxes, fmtAvgPoints, fmtInt, withCalculatedAverages } from './averages';
-
-function buildBashNote(transfers: TruckTransfers): string {
-  return `(${transfers.eilat} משאיות לאילת ו-${transfers.bashToTzra} משאיות לסניף צרעה)`;
-}
-
-function buildTzraNote(transfers: TruckTransfers): string {
-  return `(${transfers.tzraToBeerot} משאיות לבארות יצחק, ${transfers.beerotToTzra} משאיות מבארות יצחק)`;
-}
+import { buildBashNote, buildTzraNote, formatTrucksLine } from './truckNotes';
 
 /** מפריד בין סניפים — קצר, שורה אחת, נראה טוב בוואטסאפ */
 const SEPARATOR = '━━━━━━━━━━━━━━━━━━━━━━';
@@ -23,26 +16,26 @@ export function buildReportText(
   const bashNote = buildBashNote(transfers);
   const tzraNote = buildTzraNote(transfers);
 
-  return `שלום ${managerName} דוח נתונים
+  return `שלום ${managerName}
 
-נתונים לתאריך ${data.date}
+דוח נתונים לתאריך ${data.date}
 
 סניף באר שבע
 ${fmtInt(bash.boxes)} תיבות
 ${fmtInt(bash.points)} נקודות
-${fmtInt(bash.trucks)} משאיות ${bashNote}
+${formatTrucksLine(bash.trucks, bashNote)}
 ממוצע לנהג
 ${fmtAvgBoxes(bashAvg.avgBoxes)} תיבות
 ${fmtAvgPoints(bashAvg.avgPoints)} נקודות
 
 ${SEPARATOR}
 
-נתונים לתאריך ${data.date}
+דוח נתונים לתאריך ${data.date}
 
 סניף צרעה
 ${fmtInt(tzora.boxes)} תיבות
 ${fmtInt(tzora.points)} נקודות
-${fmtInt(tzora.trucks)} משאיות ${tzraNote}
+${formatTrucksLine(tzora.trucks, tzraNote)}
 ממוצע לנהג
 ${fmtAvgBoxes(tzraAvg.avgBoxes)} תיבות
 ${fmtAvgPoints(tzraAvg.avgPoints)} נקודות`;

@@ -24,7 +24,15 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "predictiveBackGestureEnabled": false
+      "queries": [
+        { "scheme": "whatsapp" },
+        { "scheme": "https", "host": "wa.me" },
+        { "scheme": "https", "host": "api.whatsapp.com" },
+        { "package": "com.whatsapp" },
+        { "package": "com.whatsapp.w4b" }
+      ],
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize"
     },
     "plugins": [
       [

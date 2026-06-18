@@ -6,10 +6,11 @@ import {
   ScrollView,
   StyleSheet,
   SafeAreaView,
-  Linking,
   Alert,
+  Share,
 } from 'react-native';
 import { colors } from '../theme';
+import { openWhatsApp } from '../utils/whatsapp';
 
 interface Props {
   reportText: string;
@@ -29,15 +30,18 @@ export function ReportScreen({
   onChangeRecipient,
 }: Props) {
   const sendWhatsApp = async () => {
-    const phone = managerPhone.replace(/\D/g, '');
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(reportText)}`;
-
-    const canOpen = await Linking.canOpenURL(url);
-    if (!canOpen) {
-      Alert.alert('שגיאה', 'לא ניתן לפתוח וואטסאפ');
-      return;
+    try {
+      await openWhatsApp(managerPhone, reportText);
+    } catch {
+      Alert.alert(
+        'לא נפתח וואטסאפ',
+        'נסה לשתף את הדוח ידנית, או ודא שוואטסאפ מותקן ומספר הנמען נכון (972XXXXXXXXX)',
+        [
+          { text: 'שתף דוח', onPress: () => Share.share({ message: reportText }) },
+          { text: 'סגור', style: 'cancel' },
+        ],
+      );
     }
-    await Linking.openURL(url);
   };
 
   return (

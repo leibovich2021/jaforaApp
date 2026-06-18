@@ -9,9 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { AppSettings } from '../types';
 import { colors } from '../theme';
+import { useKeyboardHeight } from '../utils/keyboard';
 
 interface Props {
   visible: boolean;
@@ -22,6 +25,7 @@ interface Props {
 
 export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
   const [draft, setDraft] = useState(settings);
+  const kbHeight = useKeyboardHeight();
 
   useEffect(() => {
     if (visible) setDraft(settings);
@@ -31,9 +35,12 @@ export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.panel}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.backdrop} />
+        </TouchableWithoutFeedback>
+        <View style={[styles.panel, kbHeight > 0 && { marginBottom: kbHeight }]}>
           <View style={styles.header}>
             <Text style={styles.title}>⚙️ הגדרות</Text>
             <TouchableOpacity onPress={onClose} hitSlop={12}>
@@ -41,7 +48,14 @@ export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            style={styles.body}
+            contentContainerStyle={{ paddingBottom: kbHeight > 0 ? 20 : 0 }}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets
+            showsVerticalScrollIndicator={false}
+          >
             <Text style={styles.label}>שם המנהל</Text>
             <TextInput
               style={styles.input}
@@ -90,6 +104,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'flex-end',
+  },
+  backdrop: {
+    flex: 1,
   },
   panel: {
     backgroundColor: colors.surface,

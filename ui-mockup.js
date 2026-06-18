@@ -67,10 +67,29 @@ function buildTruckNotes() {
   const tzraBeerot = +document.getElementById('tr-tzra-beerot').value || 0;
   const beerotTzra = +document.getElementById('tr-beerot-tzra').value || 0;
 
-  const bashNote = `(${eilat} משאיות לאילת ו-${bashTzra} משאיות לסניף צרעה)`;
-  const tzraNote = `(${tzraBeerot} משאיות לבארות יצחק, ${beerotTzra} משאיות מבארות יצחק)`;
+  function part(count, label) {
+    if (count <= 0) return null;
+    return `${count} משאיות ${label}`;
+  }
+
+  const bashParts = [
+    part(eilat, 'לאילת'),
+    part(bashTzra, 'לסניף צרעה'),
+  ].filter(Boolean);
+  const bashNote = bashParts.length ? `(${bashParts.join(' ו-')})` : '';
+
+  const tzraParts = [
+    part(tzraBeerot, 'לבארות יצחק'),
+    part(beerotTzra, 'מבארות יצחק'),
+  ].filter(Boolean);
+  const tzraNote = tzraParts.length ? `(${tzraParts.join(', ')})` : '';
 
   return { bashNote, tzraNote, eilat, bashTzra, tzraBeerot, beerotTzra };
+}
+
+function formatTrucksLine(trucks, note) {
+  const base = `${trucks} משאיות`;
+  return note ? `${base} ${note}` : base;
 }
 
 function updateNotesPreview() {
@@ -79,8 +98,8 @@ function updateNotesPreview() {
   const tzraTrucks = document.getElementById('val-tzra-trucks').textContent;
 
   document.getElementById('notes-preview').innerHTML =
-    `<strong>באר שבע:</strong> ${bashTrucks} משאיות ${bashNote}<br>` +
-    `<strong>צרעה:</strong> ${tzraTrucks} משאיות ${tzraNote}`;
+    `<strong>באר שבע:</strong> ${formatTrucksLine(bashTrucks, bashNote)}<br>` +
+    `<strong>צרעה:</strong> ${formatTrucksLine(tzraTrucks, tzraNote)}`;
 }
 
 function buildReport() {
@@ -88,26 +107,26 @@ function buildReport() {
   const date = getReportDate();
   const separator = '━━━━━━━━━━━━━━━━━━━━━━';
 
-  return `שלום ${managerName} דוח נתונים
+  return `שלום ${managerName}
 
-נתונים לתאריך ${date}
+דוח נתונים לתאריך ${date}
 
 סניף באר שבע
 ${document.getElementById('val-bash-boxes').textContent} תיבות
 ${document.getElementById('val-bash-points').textContent} נקודות
-${document.getElementById('val-bash-trucks').textContent} משאיות ${bashNote}
+${formatTrucksLine(document.getElementById('val-bash-trucks').textContent.replace(/,/g, ''), bashNote)}
 ממוצע לנהג
 ${document.getElementById('val-bash-avg-boxes').textContent} תיבות
 ${document.getElementById('val-bash-avg-points').textContent} נקודות
 
 ${separator}
 
-נתונים לתאריך ${date}
+דוח נתונים לתאריך ${date}
 
 סניף צרעה
 ${document.getElementById('val-tzra-boxes').textContent} תיבות
 ${document.getElementById('val-tzra-points').textContent} נקודות
-${document.getElementById('val-tzra-trucks').textContent} משאיות ${tzraNote}
+${formatTrucksLine(document.getElementById('val-tzra-trucks').textContent.replace(/,/g, ''), tzraNote)}
 ממוצע לנהג
 ${document.getElementById('val-tzra-avg-boxes').textContent} תיבות
 ${document.getElementById('val-tzra-avg-points').textContent} נקודות`;

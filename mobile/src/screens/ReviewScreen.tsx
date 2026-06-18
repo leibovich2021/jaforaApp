@@ -1,16 +1,20 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import { ExtractedReport, TruckTransfers } from '../types';
 import { colors } from '../theme';
 import { fmtAvgBoxes, fmtAvgPoints, fmtInt, withCalculatedAverages } from '../utils/averages';
+import { useKeyboardHeight } from '../utils/keyboard';
+import { buildBashNote, buildTzraNote, formatTrucksLine } from '../utils/truckNotes';
 
 interface Props {
   data: ExtractedReport;
@@ -58,7 +62,7 @@ function BranchCard({
   );
 }
 
-function TransferInput({
+function TransferStepper({
   label,
   value,
   onChange,
@@ -69,13 +73,23 @@ function TransferInput({
 }) {
   return (
     <View style={styles.transferRow}>
-      <TextInput
-        style={styles.transferInput}
-        value={String(value)}
-        onChangeText={(t) => onChange(Math.max(0, parseInt(t, 10) || 0))}
-        keyboardType="number-pad"
-        textAlign="center"
-      />
+      <View style={styles.stepper}>
+        <TouchableOpacity
+          style={styles.stepBtn}
+          onPress={() => onChange(value + 1)}
+          hitSlop={8}
+        >
+          <Text style={styles.stepBtnText}>+</Text>
+        </TouchableOpacity>
+        <Text style={styles.stepValue}>{value}</Text>
+        <TouchableOpacity
+          style={styles.stepBtn}
+          onPress={() => onChange(Math.max(0, value - 1))}
+          hitSlop={8}
+        >
+          <Text style={styles.stepBtnText}>−</Text>
+        </TouchableOpacity>
+      </View>
       <Text style={styles.transferLabel}>{label}</Text>
     </View>
   );
@@ -88,81 +102,99 @@ export function ReviewScreen({
   onGenerate,
   onRetake,
 }: Props) {
-  const bashNote = `(${transfers.eilat} משאיות לאילת ו-${transfers.bashToTzra} משאיות לסניף צרעה)`;
-  const tzraNote = `(${transfers.tzraToBeerot} משאיות לבארות יצחק, ${transfers.beerotToTzra} משאיות מבארות יצחק)`;
+  const kbHeight = useKeyboardHeight();
+  const scrollRef = useRef<ScrollView>(null);
+
+  const bashNote = buildBashNote(transfers);
+  const tzraNote = buildTzraNote(transfers);
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.topRow}>
-          <Text style={styles.heading}>📊 סיכום ושליחה</Text>
-          <TouchableOpacity onPress={onRetake}>
-            <Text style={styles.retakeLink}>📷 צלם שוב</Text>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+      >
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(kbHeight, 40) + 80 }]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets
+          showsVerticalScrollIndicator={false}
+          onScrollBeginDrag={Keyboard.dismiss}
+        >
+          <View style={styles.topRow}>
+            <Text style={styles.heading}>📊 סיכום ושליחה</Text>
+            <TouchableOpacity onPress={onRetake}>
+              <Text style={styles.retakeLink}>📷 צלם שוב</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.dateBadge}>
+            <Text style={styles.dateText}>📅 {data.date} · {data.dayName}</Text>
+          </View>
+
+          <BranchCard
+            title="באר שבע"
+            headerColor="rgba(59,130,246,0.2)"
+            data={data.beerSheva}
+          />
+          <BranchCard
+            title="צרעה"
+            headerColor="rgba(139,92,246,0.2)"
+            data={data.tzora}
+          />
+
+          <Text style={styles.sectionTitle}>🚛 העברות משאיות</Text>
+          <View style={styles.transferForm}>
+            <Text style={styles.groupLabel}>סניף באר שבע</Text>
+            <TransferStepper
+              label="משאיות לאילת"
+              value={transfers.eilat}
+              onChange={(v) => onChangeTransfers({ ...transfers, eilat: v })}
+            />
+            <TransferStepper
+              label="משאיות לסניף צרעה"
+              value={transfers.bashToTzra}
+              onChange={(v) => onChangeTransfers({ ...transfers, bashToTzra: v })}
+            />
+            <Text style={styles.groupLabel}>סניף צרעה</Text>
+            <TransferStepper
+              label="משאיות לבארות יצחק"
+              value={transfers.tzraToBeerot}
+              onChange={(v) => onChangeTransfers({ ...transfers, tzraToBeerot: v })}
+            />
+            <TransferStepper
+              label="משאיות מבארות יצחק"
+              value={transfers.beerotToTzra}
+              onChange={(v) => onChangeTransfers({ ...transfers, beerotToTzra: v })}
+            />
+          </View>
+
+          <View style={styles.notesPreview}>
+            <Text style={styles.notesTitle}>תצוגה מקדימה של הערות:</Text>
+            <Text style={styles.notesText}>
+              <Text style={styles.notesBold}>באר שבע: </Text>
+              {formatTrucksLine(data.beerSheva.trucks, bashNote)}
+              {'\n'}
+              <Text style={styles.notesBold}>צרעה: </Text>
+              {formatTrucksLine(data.tzora.trucks, tzraNote)}
+            </Text>
+          </View>
+
+          <TouchableOpacity style={styles.generateBtn} onPress={onGenerate}>
+            <Text style={styles.generateText}>📝 צור דוח</Text>
           </TouchableOpacity>
-        </View>
-
-        <View style={styles.dateBadge}>
-          <Text style={styles.dateText}>📅 {data.date} · {data.dayName}</Text>
-        </View>
-
-        <BranchCard
-          title="באר שבע"
-          headerColor="rgba(59,130,246,0.2)"
-          data={data.beerSheva}
-        />
-        <BranchCard
-          title="צרעה"
-          headerColor="rgba(139,92,246,0.2)"
-          data={data.tzora}
-        />
-
-        <Text style={styles.sectionTitle}>🚛 העברות משאיות</Text>
-        <View style={styles.transferForm}>
-          <Text style={styles.groupLabel}>סניף באר שבע</Text>
-          <TransferInput
-            label="משאיות לאילת"
-            value={transfers.eilat}
-            onChange={(v) => onChangeTransfers({ ...transfers, eilat: v })}
-          />
-          <TransferInput
-            label="משאיות לסניף צרעה"
-            value={transfers.bashToTzra}
-            onChange={(v) => onChangeTransfers({ ...transfers, bashToTzra: v })}
-          />
-          <Text style={styles.groupLabel}>סניף צרעה</Text>
-          <TransferInput
-            label="משאיות לבארות יצחק"
-            value={transfers.tzraToBeerot}
-            onChange={(v) => onChangeTransfers({ ...transfers, tzraToBeerot: v })}
-          />
-          <TransferInput
-            label="משאיות מבארות יצחק"
-            value={transfers.beerotToTzra}
-            onChange={(v) => onChangeTransfers({ ...transfers, beerotToTzra: v })}
-          />
-        </View>
-
-        <View style={styles.notesPreview}>
-          <Text style={styles.notesTitle}>תצוגה מקדימה של הערות:</Text>
-          <Text style={styles.notesText}>
-            <Text style={styles.notesBold}>באר שבע: </Text>
-            {fmtInt(data.beerSheva.trucks)} משאיות {bashNote}
-            {'\n'}
-            <Text style={styles.notesBold}>צרעה: </Text>
-            {fmtInt(data.tzora.trucks)} משאיות {tzraNote}
-          </Text>
-        </View>
-
-        <TouchableOpacity style={styles.generateBtn} onPress={onGenerate}>
-          <Text style={styles.generateText}>📝 צור דוח</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  flex: { flex: 1 },
   scroll: { padding: 16, paddingBottom: 40 },
   topRow: {
     flexDirection: 'row',
@@ -235,22 +267,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   transferLabel: { flex: 1, fontSize: 14, color: colors.text, textAlign: 'right' },
-  transferInput: {
-    width: 64,
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 12,
+  },
+  stepBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     backgroundColor: colors.bg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    padding: 10,
-    color: colors.text,
-    fontSize: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepBtnText: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: colors.accent,
+    lineHeight: 26,
+  },
+  stepValue: {
+    minWidth: 36,
+    textAlign: 'center',
+    fontSize: 18,
     fontWeight: '700',
-    marginLeft: 12,
+    color: colors.text,
+    paddingHorizontal: 4,
   },
   notesPreview: {
     backgroundColor: colors.surface,
