@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Jafora",
+    "slug": "jafora",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f1419"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0f1419",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "package": "com.jafora.dailyreport",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Jafora זקוקה לגישה למצלמה כדי לצלם את האקסל",
+          "photosPermission": "Jafora זקוקה לגישה לגלריה כדי לבחור תמונה"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "212325a2-6d0b-40f3-8759-aedb5bfc2477"
+      }
+    },
+    "owner": "leibovich2021"
+  }
+}

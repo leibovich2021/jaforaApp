@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Expo / React Native
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Secrets — never commit API keys
+.env
+.env.*
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.*
+
+# Large / local files
+*.jfif
+*.mp4
+
+# Misc
+.claude/

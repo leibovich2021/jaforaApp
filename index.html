@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f1419">
+  <title>Jafora – דוח יומי</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="phone-frame">
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span class="status-time">18:42</span>
+      <span class="status-title">Jafora</span>
+      <button type="button" class="icon-btn" id="open-settings" aria-label="הגדרות">⚙️</button>
+    </div>
+
+    <!-- Prototype badge -->
+    <div class="prototype-badge">אב-טיפוס UI — לתצוגה בלבד</div>
+
+    <!-- Hidden camera input -->
+    <input type="file" id="photo-input" accept="image/*" capture="environment" hidden>
+
+    <!-- Screen 1: Home -->
+    <section class="screen active" id="screen-home">
+      <div class="screen-content home-content">
+        <div class="home-bg">
+          <div class="home-orb home-orb-1"></div>
+          <div class="home-orb home-orb-2"></div>
+        </div>
+
+        <div class="home-header">
+          <div class="home-logo">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="6" width="32" height="36" rx="4" stroke="currentColor" stroke-width="2"/>
+              <line x1="14" y1="14" x2="34" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="14" y1="22" x2="28" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="14" y1="30" x2="32" y2="30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h1 class="home-title">דוח יומי</h1>
+          <p class="home-subtitle">צלם את האקסל · קבל דוח מוכן · שלח בוואטסאפ</p>
+        </div>
+
+        <button type="button" class="capture-card" id="btn-capture">
+          <div class="capture-ring">
+            <div class="capture-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </div>
+          </div>
+          <span class="capture-label">צלם / בחר תמונה</span>
+          <span class="capture-hint">הצמד את המצלמה לטבלת האקסל</span>
+        </button>
+
+        <div class="home-steps">
+          <div class="home-step">
+            <span class="step-num">1</span>
+            <span>צילום</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="home-step">
+            <span class="step-num">2</span>
+            <span>אישור</span>
+          </div>
+          <div class="step-line"></div>
+          <div class="home-step">
+            <span class="step-num">3</span>
+            <span>שליחה</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Loading (between camera and summary) -->
+    <section class="screen" id="screen-loading">
+      <div class="screen-content center">
+        <div class="spinner"></div>
+        <h2>קורא את האקסל...</h2>
+        <p class="muted">Gemini מנתח את התמונה</p>
+      </div>
+    </section>
+
+    <!-- Summary & edit -->
+    <section class="screen" id="screen-review">
+      <div class="screen-content">
+        <div class="review-top">
+          <h2 class="screen-heading">📊 סיכום ושליחה</h2>
+          <button type="button" class="link-btn" id="btn-retake">📷 צלם שוב</button>
+        </div>
+        <p class="date-badge">📅 22/06/2026 · יום שני</p>
+
+        <!-- Branch cards -->
+        <div class="branch-card">
+          <div class="branch-header bash">בש</div>
+          <div class="stats-grid">
+            <div class="stat">
+              <span class="stat-value" id="val-bash-boxes">17,151</span>
+              <span class="stat-label">תיבות</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="val-bash-points">153</span>
+              <span class="stat-label">נקודות</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="val-bash-trucks">14</span>
+              <span class="stat-label">משאיות</span>
+            </div>
+          </div>
+          <div class="avg-row">
+            ממוצע לנהג: <strong id="val-bash-avg-boxes">1,225</strong> תיבות · <strong id="val-bash-avg-points">10.9</strong> נקודות
+          </div>
+        </div>
+
+        <div class="branch-card">
+          <div class="branch-header tzra">צרעה</div>
+          <div class="stats-grid">
+            <div class="stat">
+              <span class="stat-value" id="val-tzra-boxes">22,593</span>
+              <span class="stat-label">תיבות</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="val-tzra-points">158</span>
+              <span class="stat-label">נקודות</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="val-tzra-trucks">14</span>
+              <span class="stat-label">משאיות</span>
+            </div>
+          </div>
+          <div class="avg-row">
+            ממוצע לנהג: <strong id="val-tzra-avg-boxes">1,614</strong> תיבות · <strong id="val-tzra-avg-points">11.3</strong> נקודות
+          </div>
+        </div>
+
+        <!-- Truck transfers -->
+        <div class="section-title">🚛 העברות משאיות</div>
+        <div class="transfer-form">
+          <div class="transfer-group-label">סניף באר שבע</div>
+          <label class="transfer-row">
+            <span class="transfer-label">משאיות לאילת</span>
+            <input type="number" class="transfer-input" id="tr-eilat" value="1" min="0">
+          </label>
+          <label class="transfer-row">
+            <span class="transfer-label">משאיות לסניף צרעה</span>
+            <input type="number" class="transfer-input" id="tr-bash-tzra" value="6" min="0">
+          </label>
+          <div class="transfer-group-label">סניף צרעה</div>
+          <label class="transfer-row">
+            <span class="transfer-label">משאיות לבארות יצחק</span>
+            <input type="number" class="transfer-input" id="tr-tzra-beerot" value="0" min="0">
+          </label>
+          <label class="transfer-row">
+            <span class="transfer-label">משאיות מבארות יצחק</span>
+            <input type="number" class="transfer-input" id="tr-beerot-tzra" value="1" min="0">
+          </label>
+        </div>
+
+        <div class="notes-preview">
+          <div class="notes-preview-title">תצוגה מקדימה של הערות:</div>
+          <div class="notes-preview-text" id="notes-preview"></div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-large" id="btn-generate">
+          📝 צור דוח
+        </button>
+      </div>
+    </section>
+
+    <!-- Screen 4: Report -->
+    <section class="screen" id="screen-report">
+      <div class="screen-content">
+        <h2 class="screen-heading">📤 הדוח שלך</h2>
+        <div class="report-box" id="report-text"></div>
+
+        <div class="recipient-bar">
+          <span>👤 נמען:</span>
+          <strong id="recipient-name">לוזיק</strong>
+          <button type="button" class="link-btn" id="change-recipient">החלף</button>
+        </div>
+
+        <button type="button" class="btn btn-whatsapp btn-large" id="btn-whatsapp">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          שלח ללוזיק בוואטסאפ
+        </button>
+        <button type="button" class="btn btn-secondary" id="btn-back-review">← חזור לעריכה</button>
+        <button type="button" class="btn btn-ghost" id="btn-new-report">📷 דוח חדש</button>
+      </div>
+    </section>
+
+    <!-- Settings overlay -->
+    <div class="overlay hidden" id="settings-overlay">
+      <div class="overlay-panel">
+        <div class="overlay-header">
+          <h2>⚙️ הגדרות</h2>
+          <button type="button" class="icon-btn" id="close-settings">✕</button>
+        </div>
+        <div class="overlay-body">
+          <label>
+            שם המנהל
+            <input type="text" id="setting-name" value="לוזיק">
+          </label>
+          <label>
+            מספר וואטסאפ
+            <input type="tel" id="setting-phone" value="972501234567" placeholder="972XXXXXXXXX">
+            <small>פורמט: 972XXXXXXXXX (ללא +)</small>
+          </label>
+          <label>
+            מפתח Gemini API
+            <input type="password" id="setting-api" placeholder="AIza...">
+            <small>חינם — נשמר רק במכשיר</small>
+          </label>
+        </div>
+        <button type="button" class="btn btn-primary" id="save-settings">שמור</button>
+      </div>
+    </div>
+
+    <!-- Step indicator (3 steps) -->
+    <div class="step-bar" id="step-bar">
+      <div class="step active" data-step="1"></div>
+      <div class="step" data-step="2"></div>
+      <div class="step" data-step="3"></div>
+    </div>
+  </div>
+
+  <script src="ui-mockup.js"></script>
+</body>
+</html>
