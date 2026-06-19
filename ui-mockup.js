@@ -4,7 +4,6 @@ const screens = {
   home: document.getElementById('screen-home'),
   loading: document.getElementById('screen-loading'),
   review: document.getElementById('screen-review'),
-  report: document.getElementById('screen-report'),
 };
 
 const photoInput = document.getElementById('photo-input');
@@ -98,8 +97,8 @@ function updateNotesPreview() {
   const tzraTrucks = document.getElementById('val-tzra-trucks').textContent;
 
   document.getElementById('notes-preview').innerHTML =
-    `<strong>באר שבע:</strong> ${formatTrucksLine(bashTrucks, bashNote)}<br>` +
-    `<strong>צרעה:</strong> ${formatTrucksLine(tzraTrucks, tzraNote)}`;
+    `<strong>צרעה:</strong> ${formatTrucksLine(tzraTrucks, tzraNote)}<br>` +
+    `<strong>באר שבע:</strong> ${formatTrucksLine(bashTrucks, bashNote)}`;
 }
 
 function buildReport() {
@@ -111,25 +110,25 @@ function buildReport() {
 
 דוח נתונים לתאריך ${date}
 
-סניף באר שבע
-${document.getElementById('val-bash-boxes').textContent} תיבות
-${document.getElementById('val-bash-points').textContent} נקודות
-${formatTrucksLine(document.getElementById('val-bash-trucks').textContent.replace(/,/g, ''), bashNote)}
-ממוצע לנהג
-${document.getElementById('val-bash-avg-boxes').textContent} תיבות
-${document.getElementById('val-bash-avg-points').textContent} נקודות
-
-${separator}
-
-דוח נתונים לתאריך ${date}
-
 סניף צרעה
 ${document.getElementById('val-tzra-boxes').textContent} תיבות
 ${document.getElementById('val-tzra-points').textContent} נקודות
 ${formatTrucksLine(document.getElementById('val-tzra-trucks').textContent.replace(/,/g, ''), tzraNote)}
 ממוצע לנהג
 ${document.getElementById('val-tzra-avg-boxes').textContent} תיבות
-${document.getElementById('val-tzra-avg-points').textContent} נקודות`;
+${document.getElementById('val-tzra-avg-points').textContent} נקודות
+
+${separator}
+
+דוח נתונים לתאריך ${date}
+
+סניף באר שבע
+${document.getElementById('val-bash-boxes').textContent} תיבות
+${document.getElementById('val-bash-points').textContent} נקודות
+${formatTrucksLine(document.getElementById('val-bash-trucks').textContent.replace(/,/g, ''), bashNote)}
+ממוצע לנהג
+${document.getElementById('val-bash-avg-boxes').textContent} תיבות
+${document.getElementById('val-bash-avg-points').textContent} נקודות`;
 }
 
 function updateRecipientUI() {
@@ -166,14 +165,7 @@ document.getElementById('btn-retake').addEventListener('click', () => {
   photoInput.click();
 });
 
-document.getElementById('btn-generate').addEventListener('click', () => {
-  document.getElementById('report-text').textContent = buildReport();
-  updateRecipientUI();
-  showScreen('report', 3);
-});
-
-document.getElementById('btn-back-review').addEventListener('click', () => showScreen('review', 2));
-document.getElementById('btn-new-report').addEventListener('click', () => {
+document.getElementById('btn-new-form').addEventListener('click', () => {
   photoInput.value = '';
   showScreen('home', 1);
 });
@@ -185,9 +177,9 @@ document.getElementById('btn-new-report').addEventListener('click', () => {
 
 // WhatsApp (demo — shows alert in prototype)
 document.getElementById('btn-whatsapp').addEventListener('click', () => {
-  const text = encodeURIComponent(document.getElementById('report-text').textContent);
+  const report = buildReport();
   alert(`באפליקציה האמיתית:\n\nייפתח וואטסאפ ל-${managerName}\n(${managerPhone})\n\nעם הדוח מוכן לשליחה`);
-  // In real app: window.open(`https://wa.me/${managerPhone}?text=${text}`);
+  // In real app: window.open(`https://wa.me/${managerPhone}?text=${encodeURIComponent(report)}`);
 });
 
 document.getElementById('change-recipient').addEventListener('click', () => {

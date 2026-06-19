@@ -5,10 +5,10 @@ import { SettingsModal } from './src/components/SettingsModal';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { LoadingScreen } from './src/screens/LoadingScreen';
 import { ReviewScreen } from './src/screens/ReviewScreen';
-import { ReportScreen } from './src/screens/ReportScreen';
 import { extractReportFromImage } from './src/services/gemini';
 import { loadSettings, saveSettings } from './src/services/storage';
 import { buildReportText } from './src/utils/report';
+import { openWhatsApp } from './src/utils/whatsapp';
 import {
   AppSettings,
   DEFAULT_SETTINGS,
@@ -33,7 +33,6 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedReport | null>(null);
   const [transfers, setTransfers] = useState<TruckTransfers>(DEFAULT_TRANSFERS);
-  const [reportText, setReportText] = useState('');
 
   useEffect(() => {
     loadSettings().then(setSettings);
@@ -115,10 +114,23 @@ export default function App() {
     ]);
   };
 
-  const handleGenerate = () => {
+  const handleSendWhatsApp = async () => {
     if (!extracted) return;
-    setReportText(buildReportText(extracted, transfers, settings.managerName));
-    setScreen('report');
+    const report = buildReportText(extracted, transfers, settings.managerName);
+    try {
+      await openWhatsApp(settings.managerPhone, report);
+    } catch {
+      Alert.alert(
+        'לא נפתח וואטסאפ',
+        'נסה לשתף ידנית, או ודא שוואטסאפ מותקן ומספר הנמען נכון (972XXXXXXXXX)',
+      );
+    }
+  };
+
+  const handleNewForm = () => {
+    setExtracted(null);
+    setTransfers(DEFAULT_TRANSFERS);
+    setScreen('home');
   };
 
   return (
@@ -133,24 +145,12 @@ export default function App() {
         <ReviewScreen
           data={extracted}
           transfers={transfers}
-          onChangeTransfers={setTransfers}
-          onGenerate={handleGenerate}
-          onRetake={openCamera}
-        />
-      )}
-      {screen === 'report' && (
-        <ReportScreen
-          reportText={reportText}
           managerName={settings.managerName}
-          managerPhone={settings.managerPhone}
-          onBack={() => setScreen('review')}
-          onNewReport={() => {
-            setExtracted(null);
-            setTransfers(DEFAULT_TRANSFERS);
-            setReportText('');
-            setScreen('home');
-          }}
+          onChangeTransfers={setTransfers}
+          onSendWhatsApp={handleSendWhatsApp}
           onChangeRecipient={() => setSettingsOpen(true)}
+          onRetake={openCamera}
+          onNewForm={handleNewForm}
         />
       )}
 

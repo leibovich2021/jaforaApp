@@ -19,9 +19,12 @@ import { buildBashNote, buildTzraNote, formatTrucksLine } from '../utils/truckNo
 interface Props {
   data: ExtractedReport;
   transfers: TruckTransfers;
+  managerName: string;
   onChangeTransfers: (t: TruckTransfers) => void;
-  onGenerate: () => void;
+  onSendWhatsApp: () => void;
+  onChangeRecipient: () => void;
   onRetake: () => void;
+  onNewForm: () => void;
 }
 
 function BranchCard({
@@ -98,9 +101,12 @@ function TransferStepper({
 export function ReviewScreen({
   data,
   transfers,
+  managerName,
   onChangeTransfers,
-  onGenerate,
+  onSendWhatsApp,
+  onChangeRecipient,
   onRetake,
+  onNewForm,
 }: Props) {
   const kbHeight = useKeyboardHeight();
   const scrollRef = useRef<ScrollView>(null);
@@ -136,29 +142,18 @@ export function ReviewScreen({
           </View>
 
           <BranchCard
-            title="באר שבע"
-            headerColor="rgba(59,130,246,0.2)"
-            data={data.beerSheva}
-          />
-          <BranchCard
             title="צרעה"
             headerColor="rgba(139,92,246,0.2)"
             data={data.tzora}
           />
+          <BranchCard
+            title="באר שבע"
+            headerColor="rgba(59,130,246,0.2)"
+            data={data.beerSheva}
+          />
 
           <Text style={styles.sectionTitle}>🚛 העברות משאיות</Text>
           <View style={styles.transferForm}>
-            <Text style={styles.groupLabel}>סניף באר שבע</Text>
-            <TransferStepper
-              label="משאיות לאילת"
-              value={transfers.eilat}
-              onChange={(v) => onChangeTransfers({ ...transfers, eilat: v })}
-            />
-            <TransferStepper
-              label="משאיות לסניף צרעה"
-              value={transfers.bashToTzra}
-              onChange={(v) => onChangeTransfers({ ...transfers, bashToTzra: v })}
-            />
             <Text style={styles.groupLabel}>סניף צרעה</Text>
             <TransferStepper
               label="משאיות לבארות יצחק"
@@ -170,21 +165,43 @@ export function ReviewScreen({
               value={transfers.beerotToTzra}
               onChange={(v) => onChangeTransfers({ ...transfers, beerotToTzra: v })}
             />
+            <Text style={styles.groupLabel}>סניף באר שבע</Text>
+            <TransferStepper
+              label="משאיות לאילת"
+              value={transfers.eilat}
+              onChange={(v) => onChangeTransfers({ ...transfers, eilat: v })}
+            />
+            <TransferStepper
+              label="משאיות לסניף צרעה"
+              value={transfers.bashToTzra}
+              onChange={(v) => onChangeTransfers({ ...transfers, bashToTzra: v })}
+            />
           </View>
 
           <View style={styles.notesPreview}>
             <Text style={styles.notesTitle}>תצוגה מקדימה של הערות:</Text>
             <Text style={styles.notesText}>
-              <Text style={styles.notesBold}>באר שבע: </Text>
-              {formatTrucksLine(data.beerSheva.trucks, bashNote)}
-              {'\n'}
               <Text style={styles.notesBold}>צרעה: </Text>
               {formatTrucksLine(data.tzora.trucks, tzraNote)}
+              {'\n'}
+              <Text style={styles.notesBold}>באר שבע: </Text>
+              {formatTrucksLine(data.beerSheva.trucks, bashNote)}
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.generateBtn} onPress={onGenerate}>
-            <Text style={styles.generateText}>📝 צור דוח</Text>
+          <View style={styles.recipientRow}>
+            <TouchableOpacity onPress={onChangeRecipient}>
+              <Text style={styles.changeLink}>החלף</Text>
+            </TouchableOpacity>
+            <Text style={styles.recipientName}>{managerName}</Text>
+            <Text style={styles.recipientLabel}>👤 נמען: </Text>
+          </View>
+
+          <TouchableOpacity style={styles.whatsappBtn} onPress={onSendWhatsApp}>
+            <Text style={styles.whatsappText}>📲 שלח ל{managerName} בוואטסאפ</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.newFormBtn} onPress={onNewForm}>
+            <Text style={styles.newFormText}>📋 טופס חדש</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -313,11 +330,24 @@ const styles = StyleSheet.create({
   notesTitle: { fontSize: 12, color: colors.textMuted, marginBottom: 8, textAlign: 'right' },
   notesText: { fontSize: 14, color: '#93c5fd', lineHeight: 22, textAlign: 'right' },
   notesBold: { fontWeight: '700', color: '#93c5fd' },
-  generateBtn: {
-    backgroundColor: colors.accent,
+  recipientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 12,
+    gap: 6,
+  },
+  recipientLabel: { fontSize: 14, color: colors.textMuted },
+  recipientName: { fontSize: 14, fontWeight: '700', color: colors.text },
+  changeLink: { color: colors.accent, fontSize: 14, fontWeight: '600', marginLeft: 8 },
+  whatsappBtn: {
+    backgroundColor: colors.whatsapp,
     borderRadius: 14,
     padding: 18,
     alignItems: 'center',
+    marginBottom: 10,
   },
-  generateText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  whatsappText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  newFormBtn: { padding: 14, alignItems: 'center', marginBottom: 8 },
+  newFormText: { color: colors.textMuted, fontSize: 15, fontWeight: '600' },
 });

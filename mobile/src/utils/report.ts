@@ -20,23 +20,23 @@ export function buildReportText(
 
 דוח נתונים לתאריך ${data.date}
 
-סניף באר שבע
-${fmtInt(bash.boxes)} תיבות
-${fmtInt(bash.points)} נקודות
-${formatTrucksLine(bash.trucks, bashNote)}
-ממוצע לנהג
-${fmtAvgBoxes(bashAvg.avgBoxes)} תיבות
-${fmtAvgPoints(bashAvg.avgPoints)} נקודות
-
-${SEPARATOR}
-
-דוח נתונים לתאריך ${data.date}
-
 סניף צרעה
 ${fmtInt(tzora.boxes)} תיבות
 ${fmtInt(tzora.points)} נקודות
 ${formatTrucksLine(tzora.trucks, tzraNote)}
 ממוצע לנהג
 ${fmtAvgBoxes(tzraAvg.avgBoxes)} תיבות
-${fmtAvgPoints(tzraAvg.avgPoints)} נקודות`;
+${fmtAvgPoints(tzraAvg.avgPoints)} נקודות
+
+${SEPARATOR}
+
+דוח נתונים לתאריך ${data.date}
+
+סניף באר שבע
+${fmtInt(bash.boxes)} תיבות
+${fmtInt(bash.points)} נקודות
+${formatTrucksLine(bash.trucks, bashNote)}
+ממוצע לנהג
+${fmtAvgBoxes(bashAvg.avgBoxes)} תיבות
+${fmtAvgPoints(bashAvg.avgPoints)} נקודות`;
 }

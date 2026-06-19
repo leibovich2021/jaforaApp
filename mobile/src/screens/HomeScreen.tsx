@@ -45,7 +45,7 @@ export function HomeScreen({ onCapture, onOpenSettings }: Props) {
         </TouchableOpacity>
 
         <View style={styles.steps}>
-          {['צילום', 'אישור', 'שליחה'].map((label, i) => (
+          {['צילום', 'סיכום ושליחה'].map((label, i) => (
             <React.Fragment key={label}>
               {i > 0 && <View style={styles.stepLine} />}
               <View style={styles.stepItem}>

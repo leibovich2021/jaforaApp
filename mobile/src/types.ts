@@ -26,7 +26,7 @@ export interface AppSettings {
   geminiApiKey: string;
 }
 
-export type Screen = 'home' | 'loading' | 'review' | 'report';
+export type Screen = 'home' | 'loading' | 'review';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   managerName: 'לוזיק',
