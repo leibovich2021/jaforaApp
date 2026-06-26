@@ -1,27 +1,36 @@
 import { ExtractedReport } from '../types';
 
-const EXTRACTION_PROMPT = `You are reading a photo of an Excel spreadsheet with daily logistics data in Hebrew.
+const EXTRACTION_PROMPT = `You are reading a photo of a Hebrew Excel spreadsheet with daily logistics data.
 
-The table has rows grouped by date. Each date block contains rows for locations including:
-- באר שבע (Be'er Sheva)
-- צרעה (Tzora)
+TABLE LAYOUT (columns, RIGHT to LEFT — Hebrew reading order):
+1. Column A (rightmost): DATE and DAY — general column (e.g. "22/06/2026" and "יום שני")
+2. Next column: BRANCH NAME (שם סניף) — e.g. "באר שבע" or "צרעה"
+3. Next column: TRUCKS (משאיות) — number of trucks
+4. Next column: POINTS (נקודות) — number of points
+5. Next column (leftmost): BOXES (תיבות) — number of boxes
 
-IMPORTANT RULE: Find the LATEST date (most recent chronologically) that has actual numeric data filled in for both "באר שבע" and "צרעה" rows. Ignore empty future dates.
+CRITICAL — ONE ROW PER BRANCH:
+Each branch has exactly ONE data row under a date block. On that row, read leftward from the branch name:
+  שם סניף → משאיות → נקודות → תיבות
+Example for row "צרעה": trucks = value in משאיות column, points = value in נקודות column, boxes = value in תיבות column.
+Same rule for row "באר שבע". Do NOT mix columns. Do NOT swap trucks/points/boxes. Do NOT sum sub-rows or detail lines — use only the single summary row per branch.
 
-For that latest date, extract:
-- date (format: DD/MM/YYYY)
-- dayName (Hebrew day name, e.g. יום שני)
-- beerSheva: total boxes (תיבות), total points (נקודות), trucks (משאיות)
-- tzora: same fields
+DATE RULE:
+Find the LATEST date (most recent chronologically) where BOTH "באר שבע" and "צרעה" rows have numeric data. Ignore empty future dates.
 
-Note: averages will be calculated by the app (boxes/trucks, points/trucks). You may set avgBoxes and avgPoints to 0.
+EXTRACT for that date:
+- date (DD/MM/YYYY) and dayName (Hebrew, e.g. יום שני) from the date column
+- beerSheva: trucks, points, boxes from the באר שבע row only
+- tzora: trucks, points, boxes from the צרעה row only
 
-Return ONLY valid JSON, no markdown, no explanation:
+Averages are calculated by the app — set avgBoxes and avgPoints to 0.
+
+Return ONLY valid JSON, no markdown:
 {
   "date": "22/06/2026",
   "dayName": "יום שני",
-  "beerSheva": { "boxes": 17151, "points": 153, "trucks": 14, "avgBoxes": 1225, "avgPoints": 11 },
-  "tzora": { "boxes": 22593, "points": 158, "trucks": 14, "avgBoxes": 1614, "avgPoints": 11 }
+  "beerSheva": { "boxes": 17151, "points": 153, "trucks": 14, "avgBoxes": 0, "avgPoints": 0 },
+  "tzora": { "boxes": 22593, "points": 158, "trucks": 14, "avgBoxes": 0, "avgPoints": 0 }
 }`;
 
 function parseGeminiJson(text: string): ExtractedReport {
@@ -45,8 +54,8 @@ function parseGeminiJson(text: string): ExtractedReport {
   return parsed as ExtractedReport;
 }
 
-// gemini-2.0-flash הוצא משימוש (404) — משתמשים במודלים עדכניים
-const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
+// מודל קל קודם — מהיר יותר; גיבוי אם לא זמין
+const MODELS = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-flash-latest'];
 
 async function callGemini(
   base64: string,

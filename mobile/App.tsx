@@ -6,8 +6,10 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { LoadingScreen } from './src/screens/LoadingScreen';
 import { ReviewScreen } from './src/screens/ReviewScreen';
 import { extractReportFromImage } from './src/services/gemini';
+import { setupDailyReminder } from './src/services/reminder';
 import { loadSettings, saveSettings } from './src/services/storage';
 import { buildReportText } from './src/utils/report';
+import { prepareImageForGemini } from './src/utils/prepareImage';
 import { openWhatsApp } from './src/utils/whatsapp';
 import {
   AppSettings,
@@ -27,6 +29,14 @@ const DEFAULT_TRANSFERS: TruckTransfers = {
   beerotToTzra: 0,
 };
 
+/** אחרי צילום/בחירה — מסך חיתוך מובנה (ב-Android: מלבן חופשי) */
+const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ['images'],
+  allowsEditing: true,
+  quality: 1,
+  base64: false,
+};
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
@@ -36,6 +46,7 @@ export default function App() {
 
   useEffect(() => {
     loadSettings().then(setSettings);
+    setupDailyReminder().catch(() => {});
   }, []);
 
   const handleSaveSettings = async (next: AppSettings) => {
@@ -45,9 +56,10 @@ export default function App() {
   };
 
   const processImage = useCallback(
-    async (base64: string, mimeType: string) => {
+    async (uri: string) => {
       setScreen('loading');
       try {
+        const { base64, mimeType } = await prepareImageForGemini(uri);
         const data = await extractReportFromImage(base64, mimeType, settings.geminiApiKey);
         setExtracted(data);
         setTransfers(DEFAULT_TRANSFERS);
@@ -81,32 +93,18 @@ export default function App() {
             Alert.alert('אין הרשאה', 'צריך לאשר גישה למצלמה');
             return;
           }
-          const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ['images'],
-            quality: 0.85,
-            base64: true,
-          });
-          if (!result.canceled && result.assets[0]?.base64) {
-            await processImage(
-              result.assets[0].base64,
-              result.assets[0].mimeType ?? 'image/jpeg',
-            );
+          const result = await ImagePicker.launchCameraAsync(IMAGE_PICKER_OPTIONS);
+          if (!result.canceled && result.assets[0]?.uri) {
+            await processImage(result.assets[0].uri);
           }
         },
       },
       {
         text: 'בחר מהגלריה',
         onPress: async () => {
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            quality: 0.85,
-            base64: true,
-          });
-          if (!result.canceled && result.assets[0]?.base64) {
-            await processImage(
-              result.assets[0].base64,
-              result.assets[0].mimeType ?? 'image/jpeg',
-            );
+          const result = await ImagePicker.launchImageLibraryAsync(IMAGE_PICKER_OPTIONS);
+          if (!result.canceled && result.assets[0]?.uri) {
+            await processImage(result.assets[0].uri);
           }
         },
       },

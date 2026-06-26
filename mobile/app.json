@@ -22,7 +22,8 @@
       "package": "com.jafora.dailyreport",
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "queries": [
         { "scheme": "whatsapp" },
@@ -40,6 +41,13 @@
         {
           "cameraPermission": "Jafora זקוקה לגישה למצלמה כדי לצלם את האקסל",
           "photosPermission": "Jafora זקוקה לגישה לגלריה כדי לבחור תמונה"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "jafora-reminders",
+          "color": "#4285F4"
         }
       ]
     ],
