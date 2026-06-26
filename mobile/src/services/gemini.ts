@@ -1,5 +1,5 @@
 import { ExtractedReport, BranchData } from '../types';
-import { branchHasData } from './averages';
+import { branchHasData } from '../utils/averages';
 
 const EMPTY_BRANCH: BranchData = {
   boxes: 0,
