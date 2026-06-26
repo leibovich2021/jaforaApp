@@ -1,4 +1,25 @@
-import { ExtractedReport } from '../types';
+import { ExtractedReport, BranchData } from '../types';
+import { branchHasData } from './averages';
+
+const EMPTY_BRANCH: BranchData = {
+  boxes: 0,
+  points: 0,
+  trucks: 0,
+  avgBoxes: 0,
+  avgPoints: 0,
+};
+
+function normalizeBranch(raw: unknown): BranchData {
+  if (!raw || typeof raw !== 'object') return { ...EMPTY_BRANCH };
+  const b = raw as Record<string, unknown>;
+  return {
+    boxes: Number(b.boxes) || 0,
+    points: Number(b.points) || 0,
+    trucks: Number(b.trucks) || 0,
+    avgBoxes: 0,
+    avgPoints: 0,
+  };
+}
 
 const EXTRACTION_PROMPT = `You are reading a photo of a Hebrew Excel spreadsheet with daily logistics data.
 
@@ -15,13 +36,19 @@ Each branch has exactly ONE data row under a date block. On that row, read leftw
 Example for row "צרעה": trucks = value in משאיות column, points = value in נקודות column, boxes = value in תיבות column.
 Same rule for row "באר שבע". Do NOT mix columns. Do NOT swap trucks/points/boxes. Do NOT sum sub-rows or detail lines — use only the single summary row per branch.
 
-DATE RULE:
-Find the LATEST date (most recent chronologically) where BOTH "באר שבע" and "צרעה" rows have numeric data. Ignore empty future dates.
+DATE RULE — MOST IMPORTANT:
+The table lists dates for a whole year ahead. Many future dates have NO data (empty cells).
+A date "has data" when AT LEAST ONE branch row ("באר שבע" OR "צרעה") has real numbers in משאיות, נקודות, and/or תיבות.
+On some days only one branch has data; on other days both branches have data. Both cases are valid.
+Do NOT use the latest calendar date. Do NOT use dates where all branch rows are empty.
+Find the LATEST date (most recent chronologically) that ACTUALLY HAS DATA (one or both branches).
+Example: if 26/06/2026 has data and 28/06/2026 exists but is empty — use 26/06/2026 only.
 
 EXTRACT for that date:
 - date (DD/MM/YYYY) and dayName (Hebrew, e.g. יום שני) from the date column
-- beerSheva: trucks, points, boxes from the באר שבע row only
-- tzora: trucks, points, boxes from the צרעה row only
+- beerSheva: trucks, points, boxes from the באר שבע row — if row is empty/missing, use 0 for all fields
+- tzora: trucks, points, boxes from the צרעה row — if row is empty/missing, use 0 for all fields
+- At least one branch must have real data on the chosen date
 
 Averages are calculated by the app — set avgBoxes and avgPoints to 0.
 
@@ -47,11 +74,23 @@ function parseGeminiJson(text: string): ExtractedReport {
 
   const parsed = JSON.parse(cleaned.slice(start, end + 1));
 
-  if (!parsed.beerSheva || !parsed.tzora || !parsed.date) {
+  if (!parsed.date) {
     throw new Error('חסרים נתונים בתשובה — נסה לצלם שוב');
   }
 
-  return parsed as ExtractedReport;
+  const beerSheva = normalizeBranch(parsed.beerSheva);
+  const tzora = normalizeBranch(parsed.tzora);
+
+  if (!branchHasData(beerSheva) && !branchHasData(tzora)) {
+    throw new Error('לא נמצאו נתונים בתמונה — נסה לצלם שוב');
+  }
+
+  return {
+    date: String(parsed.date),
+    dayName: String(parsed.dayName ?? ''),
+    beerSheva,
+    tzora,
+  };
 }
 
 // מודל קל קודם — מהיר יותר; גיבוי אם לא זמין

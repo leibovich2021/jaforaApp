@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { ExtractedReport, TruckTransfers } from '../types';
 import { colors } from '../theme';
-import { fmtAvgBoxes, fmtAvgPoints, fmtInt, withCalculatedAverages } from '../utils/averages';
+import { fmtAvgBoxes, fmtAvgPoints, fmtInt, withCalculatedAverages, branchHasData } from '../utils/averages';
 import { useKeyboardHeight } from '../utils/keyboard';
 import { buildBashNote, buildTzraNote, formatTrucksLine } from '../utils/truckNotes';
 
@@ -113,6 +113,8 @@ export function ReviewScreen({
 
   const bashNote = buildBashNote(transfers);
   const tzraNote = buildTzraNote(transfers);
+  const hasTzra = branchHasData(data.tzora);
+  const hasBash = branchHasData(data.beerSheva);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -141,51 +143,71 @@ export function ReviewScreen({
             <Text style={styles.dateText}>📅 {data.date} · {data.dayName}</Text>
           </View>
 
-          <BranchCard
-            title="צרעה"
-            headerColor="rgba(139,92,246,0.2)"
-            data={data.tzora}
-          />
-          <BranchCard
-            title="באר שבע"
-            headerColor="rgba(59,130,246,0.2)"
-            data={data.beerSheva}
-          />
+          {hasTzra && (
+            <BranchCard
+              title="צרעה"
+              headerColor="rgba(139,92,246,0.2)"
+              data={data.tzora}
+            />
+          )}
+          {hasBash && (
+            <BranchCard
+              title="באר שבע"
+              headerColor="rgba(59,130,246,0.2)"
+              data={data.beerSheva}
+            />
+          )}
 
           <Text style={styles.sectionTitle}>🚛 העברות משאיות</Text>
           <View style={styles.transferForm}>
-            <Text style={styles.groupLabel}>סניף צרעה</Text>
-            <TransferStepper
-              label="משאיות לבארות יצחק"
-              value={transfers.tzraToBeerot}
-              onChange={(v) => onChangeTransfers({ ...transfers, tzraToBeerot: v })}
-            />
-            <TransferStepper
-              label="משאיות מבארות יצחק"
-              value={transfers.beerotToTzra}
-              onChange={(v) => onChangeTransfers({ ...transfers, beerotToTzra: v })}
-            />
-            <Text style={styles.groupLabel}>סניף באר שבע</Text>
-            <TransferStepper
-              label="משאיות לאילת"
-              value={transfers.eilat}
-              onChange={(v) => onChangeTransfers({ ...transfers, eilat: v })}
-            />
-            <TransferStepper
-              label="משאיות לסניף צרעה"
-              value={transfers.bashToTzra}
-              onChange={(v) => onChangeTransfers({ ...transfers, bashToTzra: v })}
-            />
+            {hasTzra && (
+              <>
+                <Text style={styles.groupLabel}>סניף צרעה</Text>
+                <TransferStepper
+                  label="משאיות לבארות יצחק"
+                  value={transfers.tzraToBeerot}
+                  onChange={(v) => onChangeTransfers({ ...transfers, tzraToBeerot: v })}
+                />
+                <TransferStepper
+                  label="משאיות מבארות יצחק"
+                  value={transfers.beerotToTzra}
+                  onChange={(v) => onChangeTransfers({ ...transfers, beerotToTzra: v })}
+                />
+              </>
+            )}
+            {hasBash && (
+              <>
+                <Text style={styles.groupLabel}>סניף באר שבע</Text>
+                <TransferStepper
+                  label="משאיות לאילת"
+                  value={transfers.eilat}
+                  onChange={(v) => onChangeTransfers({ ...transfers, eilat: v })}
+                />
+                <TransferStepper
+                  label="משאיות לסניף צרעה"
+                  value={transfers.bashToTzra}
+                  onChange={(v) => onChangeTransfers({ ...transfers, bashToTzra: v })}
+                />
+              </>
+            )}
           </View>
 
           <View style={styles.notesPreview}>
             <Text style={styles.notesTitle}>תצוגה מקדימה של הערות:</Text>
             <Text style={styles.notesText}>
-              <Text style={styles.notesBold}>צרעה: </Text>
-              {formatTrucksLine(data.tzora.trucks, tzraNote)}
-              {'\n'}
-              <Text style={styles.notesBold}>באר שבע: </Text>
-              {formatTrucksLine(data.beerSheva.trucks, bashNote)}
+              {hasTzra && (
+                <>
+                  <Text style={styles.notesBold}>צרעה: </Text>
+                  {formatTrucksLine(data.tzora.trucks, tzraNote)}
+                  {hasBash ? '\n' : ''}
+                </>
+              )}
+              {hasBash && (
+                <>
+                  <Text style={styles.notesBold}>באר שבע: </Text>
+                  {formatTrucksLine(data.beerSheva.trucks, bashNote)}
+                </>
+              )}
             </Text>
           </View>
 

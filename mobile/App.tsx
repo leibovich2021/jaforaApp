@@ -29,11 +29,10 @@ const DEFAULT_TRANSFERS: TruckTransfers = {
   beerotToTzra: 0,
 };
 
-/** אחרי צילום/בחירה — מסך חיתוך מובנה (ב-Android: מלבן חופשי) */
 const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ['images'],
-  allowsEditing: true,
-  quality: 1,
+  allowsEditing: false,
+  quality: 0.85,
   base64: false,
 };
 

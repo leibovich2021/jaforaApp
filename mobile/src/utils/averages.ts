@@ -29,3 +29,8 @@ export function fmtAvgPoints(n: number): string {
 export function fmtInt(n: number): string {
   return n.toLocaleString('he-IL');
 }
+
+/** לפחות ערך אחד (משאיות / נקודות / תיבות) קיים בשורת הסניף */
+export function branchHasData(branch: BranchData): boolean {
+  return branch.trucks > 0 || branch.points > 0 || branch.boxes > 0;
+}

@@ -1,9 +1,27 @@
-import { ExtractedReport, TruckTransfers } from '../types';
-import { fmtAvgBoxes, fmtAvgPoints, fmtInt, withCalculatedAverages } from './averages';
+import { ExtractedReport, TruckTransfers, BranchData } from '../types';
+import {
+  branchHasData,
+  fmtAvgBoxes,
+  fmtAvgPoints,
+  fmtInt,
+  withCalculatedAverages,
+} from './averages';
 import { buildBashNote, buildTzraNote, formatTrucksLine } from './truckNotes';
 
-/** מפריד בין סניפים — קצר, שורה אחת, נראה טוב בוואטסאפ */
 const SEPARATOR = '━━━━━━━━━━━━━━━━━━━━━━';
+
+function buildBranchBlock(branchLabel: string, branch: BranchData, note: string, date: string): string {
+  const avg = withCalculatedAverages(branch);
+  return `דוח נתונים לתאריך ${date}
+
+סניף ${branchLabel}
+${fmtInt(branch.boxes)} תיבות
+${fmtInt(branch.points)} נקודות
+${formatTrucksLine(branch.trucks, note)}
+ממוצע לנהג
+${fmtAvgBoxes(avg.avgBoxes)} תיבות
+${fmtAvgPoints(avg.avgPoints)} נקודות`;
+}
 
 export function buildReportText(
   data: ExtractedReport,
@@ -11,32 +29,16 @@ export function buildReportText(
   managerName: string,
 ): string {
   const { beerSheva: bash, tzora } = data;
-  const bashAvg = withCalculatedAverages(bash);
-  const tzraAvg = withCalculatedAverages(tzora);
-  const bashNote = buildBashNote(transfers);
-  const tzraNote = buildTzraNote(transfers);
+  const hasTzra = branchHasData(tzora);
+  const hasBash = branchHasData(bash);
 
-  return `שלום ${managerName}
+  const blocks: string[] = [];
+  if (hasTzra) {
+    blocks.push(buildBranchBlock('צרעה', tzora, buildTzraNote(transfers), data.date));
+  }
+  if (hasBash) {
+    blocks.push(buildBranchBlock('באר שבע', bash, buildBashNote(transfers), data.date));
+  }
 
-דוח נתונים לתאריך ${data.date}
-
-סניף צרעה
-${fmtInt(tzora.boxes)} תיבות
-${fmtInt(tzora.points)} נקודות
-${formatTrucksLine(tzora.trucks, tzraNote)}
-ממוצע לנהג
-${fmtAvgBoxes(tzraAvg.avgBoxes)} תיבות
-${fmtAvgPoints(tzraAvg.avgPoints)} נקודות
-
-${SEPARATOR}
-
-דוח נתונים לתאריך ${data.date}
-
-סניף באר שבע
-${fmtInt(bash.boxes)} תיבות
-${fmtInt(bash.points)} נקודות
-${formatTrucksLine(bash.trucks, bashNote)}
-ממוצע לנהג
-${fmtAvgBoxes(bashAvg.avgBoxes)} תיבות
-${fmtAvgPoints(bashAvg.avgPoints)} נקודות`;
+  return `שלום ${managerName}\n\n${blocks.join(`\n\n${SEPARATOR}\n\n`)}`;
 }
