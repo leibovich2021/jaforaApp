@@ -12,7 +12,7 @@ export function LoadingScreen({ message = 'קורא את האקסל...' }: Props
       <View style={styles.content}>
         <ActivityIndicator size="large" color={colors.accent} />
         <Text style={styles.title}>{message}</Text>
-        <Text style={styles.subtitle}>Gemini מנתח את התמונה</Text>
+        <Text style={styles.subtitle}>קוראים את העמודות מימין לתאריך: משאיות, נקודות, תיבות</Text>
       </View>
     </SafeAreaView>
   );
@@ -36,5 +36,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
     marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });

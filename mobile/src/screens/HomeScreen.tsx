@@ -5,15 +5,19 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ScrollView,
 } from 'react-native';
+import { ErrorBanner } from '../components/ErrorBanner';
 import { colors } from '../theme';
 
 interface Props {
   onCapture: () => void;
   onOpenSettings: () => void;
+  error?: string | null;
+  onDismissError?: () => void;
 }
 
-export function HomeScreen({ onCapture, onOpenSettings }: Props) {
+export function HomeScreen({ onCapture, onOpenSettings, error, onDismissError }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.topBar}>
@@ -24,7 +28,7 @@ export function HomeScreen({ onCapture, onOpenSettings }: Props) {
         <View style={{ width: 28 }} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.orb1} />
         <View style={styles.orb2} />
 
@@ -33,8 +37,10 @@ export function HomeScreen({ onCapture, onOpenSettings }: Props) {
             <Text style={styles.logoIcon}>📋</Text>
           </View>
           <Text style={styles.title}>דוח יומי</Text>
-          <Text style={styles.subtitle}>צלם את האקסל · קבל דוח מוכן · שלח בוואטסאפ</Text>
+          <Text style={styles.subtitle}>צלם את האקסל · בדוק את המספרים · שלח בוואטסאפ</Text>
         </View>
+
+        {error ? <ErrorBanner message={error} onDismiss={onDismissError ?? (() => {})} /> : null}
 
         <TouchableOpacity style={styles.captureCard} onPress={onCapture} activeOpacity={0.85}>
           <View style={styles.captureRing}>
@@ -59,7 +65,7 @@ export function HomeScreen({ onCapture, onOpenSettings }: Props) {
             </React.Fragment>
           ))}
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -76,7 +82,7 @@ const styles = StyleSheet.create({
   settingsIcon: { fontSize: 22 },
   appName: { fontSize: 16, fontWeight: '700', color: colors.text },
   content: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 24,

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
-  View,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Keyboard,
   TouchableWithoutFeedback,
+  View,
 } from 'react-native';
-import { AppSettings } from '../types';
+import { AppSettings, VisionProviderId } from '../types';
 import { colors } from '../theme';
 import { useKeyboardHeight } from '../utils/keyboard';
 
@@ -21,6 +21,52 @@ interface Props {
   settings: AppSettings;
   onClose: () => void;
   onSave: (settings: AppSettings) => void;
+}
+
+const PROVIDERS: { id: VisionProviderId; label: string }[] = [
+  { id: 'auto', label: 'אוטומטי' },
+  { id: 'gemini', label: 'Gemini' },
+  { id: 'openai', label: 'OpenAI' },
+  { id: 'anthropic', label: 'Claude' },
+];
+
+function SecretField({
+  label,
+  hint,
+  value,
+  placeholder,
+  onChangeText,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  placeholder: string;
+  onChangeText: (value: string) => void;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <View>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.secretRow}>
+        <TouchableOpacity onPress={() => setVisible((current) => !current)} hitSlop={8}>
+          <Text style={styles.reveal}>{visible ? 'הסתר' : 'הצג'}</Text>
+        </TouchableOpacity>
+        <TextInput
+          style={[styles.input, styles.secretInput]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textMuted}
+          secureTextEntry={!visible}
+          textAlign="left"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="off"
+        />
+      </View>
+      <Text style={styles.hint}>{hint}</Text>
+    </View>
+  );
 }
 
 export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
@@ -50,7 +96,7 @@ export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
 
           <ScrollView
             style={styles.body}
-            contentContainerStyle={{ paddingBottom: kbHeight > 0 ? 20 : 0 }}
+            contentContainerStyle={{ paddingBottom: kbHeight > 0 ? 20 : 8 }}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             automaticallyAdjustKeyboardInsets
@@ -60,7 +106,7 @@ export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
             <TextInput
               style={styles.input}
               value={draft.managerName}
-              onChangeText={(v) => setDraft({ ...draft, managerName: v })}
+              onChangeText={(managerName) => setDraft({ ...draft, managerName })}
               textAlign="right"
             />
 
@@ -68,7 +114,7 @@ export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
             <TextInput
               style={styles.input}
               value={draft.managerPhone}
-              onChangeText={(v) => setDraft({ ...draft, managerPhone: v })}
+              onChangeText={(managerPhone) => setDraft({ ...draft, managerPhone })}
               placeholder="972XXXXXXXXX"
               placeholderTextColor={colors.textMuted}
               keyboardType="phone-pad"
@@ -76,21 +122,49 @@ export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
             />
             <Text style={styles.hint}>פורמט: 972XXXXXXXXX (ללא +)</Text>
 
-            <Text style={styles.label}>מפתח Gemini API</Text>
-            <TextInput
-              style={styles.input}
+            <Text style={styles.label}>מי קורא את התמונה</Text>
+            <View style={styles.providerRow}>
+              {PROVIDERS.map((provider) => {
+                const selected = draft.visionProvider === provider.id;
+                return (
+                  <TouchableOpacity
+                    key={provider.id}
+                    style={[styles.chip, selected && styles.chipOn]}
+                    onPress={() => setDraft({ ...draft, visionProvider: provider.id })}
+                  >
+                    <Text style={[styles.chipText, selected && styles.chipTextOn]}>{provider.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={styles.hint}>
+              אוטומטי: Gemini קודם. אם הקריאה נכשלת ויש מפתח נוסף, עוברים אליו לבד.
+            </Text>
+
+            <SecretField
+              label="מפתח Gemini API"
+              hint="ברירת המחדל. מ-aistudio.google.com/apikey, מתחיל ב-AIza. נשמר רק בטלפון."
               value={draft.geminiApiKey}
-              onChangeText={(v) => setDraft({ ...draft, geminiApiKey: v })}
               placeholder="AIza..."
-              placeholderTextColor={colors.textMuted}
-              secureTextEntry
-              textAlign="right"
-              autoCapitalize="none"
+              onChangeText={(geminiApiKey) => setDraft({ ...draft, geminiApiKey })}
             />
-            <Text style={styles.hint}>חינם — נשמר רק במכשיר שלך</Text>
+            <SecretField
+              label="מפתח OpenAI (גיבוי)"
+              hint="אופציונלי, בתשלום. מ-platform.openai.com/api-keys, מתחיל ב-sk-."
+              value={draft.openaiApiKey}
+              placeholder="sk-..."
+              onChangeText={(openaiApiKey) => setDraft({ ...draft, openaiApiKey })}
+            />
+            <SecretField
+              label="מפתח Claude (גיבוי)"
+              hint="אופציונלי, בתשלום. מ-console.anthropic.com, מתחיל ב-sk-ant-."
+              value={draft.anthropicApiKey}
+              placeholder="sk-ant-..."
+              onChangeText={(anthropicApiKey) => setDraft({ ...draft, anthropicApiKey })}
+            />
           </ScrollView>
 
-          <TouchableOpacity style={styles.saveBtn} onPress={() => onSave(draft)}>
+          <TouchableOpacity style={styles.saveBtn} onPress={() => { Keyboard.dismiss(); onSave(draft); }}>
             <Text style={styles.saveText}>שמור</Text>
           </TouchableOpacity>
         </View>
@@ -105,15 +179,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'flex-end',
   },
-  backdrop: {
-    flex: 1,
-  },
+  backdrop: { flex: 1 },
   panel: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
-    maxHeight: '85%',
+    maxHeight: '90%',
   },
   header: {
     flexDirection: 'row',
@@ -141,13 +213,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 12,
   },
+  secretRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  secretInput: { flex: 1, marginBottom: 8, writingDirection: 'ltr' },
+  reveal: { color: colors.accent, fontSize: 13, fontWeight: '700', paddingHorizontal: 4 },
   hint: {
     fontSize: 12,
     color: colors.textMuted,
     textAlign: 'right',
     marginBottom: 16,
-    marginTop: -8,
+    marginTop: -4,
+    lineHeight: 18,
   },
+  providerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginBottom: 8,
+  },
+  chip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.bg,
+  },
+  chipOn: {
+    borderColor: colors.accent,
+    backgroundColor: 'rgba(66,133,244,0.18)',
+  },
+  chipText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  chipTextOn: { color: '#bfdbfe' },
   saveBtn: {
     backgroundColor: colors.accent,
     borderRadius: 14,
