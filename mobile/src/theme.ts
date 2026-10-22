@@ -1,13 +1,34 @@
 export const colors = {
-  bg: '#0f1419',
-  surface: '#1a2332',
-  surface2: '#243044',
-  text: '#e8edf4',
-  textMuted: '#8b9cb3',
-  accent: '#4285f4',
-  bash: '#3b82f6',
-  tzra: '#8b5cf6',
-  whatsapp: '#25d366',
-  border: '#2d3a4f',
-  error: '#ef4444',
+  bg: '#f3f0ea',
+  surface: '#fffcf8',
+  surface2: '#ebe6de',
+  text: '#1c1916',
+  textMuted: '#6f675e',
+  accent: '#2c4a3e',
+  accentSoft: '#e5eee8',
+  onAccent: '#f7f5f1',
+  bash: '#2c4a3e',
+  bashSoft: '#e5eee8',
+  tzra: '#6b5144',
+  tzraSoft: '#f3ebe4',
+  whatsapp: '#1b7a45',
+  border: '#e2dbd2',
+  error: '#8c3d38',
+  errorSoft: '#f8eeeb',
+  errorBorder: '#e6ccc8',
+};
+
+export const space = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 40,
+};
+
+export const radius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
 };

@@ -48,9 +48,6 @@ function SecretField({
     <View>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.secretRow}>
-        <TouchableOpacity onPress={() => setVisible((current) => !current)} hitSlop={8}>
-          <Text style={styles.reveal}>{visible ? 'הסתר' : 'הצג'}</Text>
-        </TouchableOpacity>
         <TextInput
           style={[styles.input, styles.secretInput]}
           value={value}
@@ -63,6 +60,9 @@ function SecretField({
           autoCorrect={false}
           autoComplete="off"
         />
+        <TouchableOpacity onPress={() => setVisible((current) => !current)} hitSlop={8}>
+          <Text style={styles.reveal}>{visible ? 'הסתר' : 'הצג'}</Text>
+        </TouchableOpacity>
       </View>
       <Text style={styles.hint}>{hint}</Text>
     </View>
@@ -88,7 +88,7 @@ export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
         </TouchableWithoutFeedback>
         <View style={[styles.panel, kbHeight > 0 && { marginBottom: kbHeight }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>⚙️ הגדרות</Text>
+            <Text style={styles.title}>הגדרות</Text>
             <TouchableOpacity onPress={onClose} hitSlop={12}>
               <Text style={styles.close}>✕</Text>
             </TouchableOpacity>
@@ -176,7 +176,7 @@ export function SettingsModal({ visible, settings, onClose, onSave }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(28,25,22,0.35)',
     justifyContent: 'flex-end',
   },
   backdrop: { flex: 1 },
@@ -184,7 +184,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 24,
     maxHeight: '90%',
   },
   header: {
@@ -193,25 +195,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  title: { fontSize: 18, fontWeight: '700', color: colors.text },
-  close: { fontSize: 20, color: colors.textMuted, padding: 4 },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    writingDirection: 'rtl',
+  },
+  close: { fontSize: 18, color: colors.textMuted, padding: 4 },
   body: { marginBottom: 16 },
   label: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 6,
+    marginBottom: 8,
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   input: {
     backgroundColor: colors.bg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     color: colors.text,
     fontSize: 16,
-    marginBottom: 12,
+    marginBottom: 8,
+    writingDirection: 'rtl',
   },
   secretRow: {
     flexDirection: 'row',
@@ -219,13 +229,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   secretInput: { flex: 1, marginBottom: 8, writingDirection: 'ltr' },
-  reveal: { color: colors.accent, fontSize: 13, fontWeight: '700', paddingHorizontal: 4 },
+  reveal: { color: colors.accent, fontSize: 13, fontWeight: '600', paddingHorizontal: 4 },
   hint: {
     fontSize: 12,
     color: colors.textMuted,
     textAlign: 'right',
+    writingDirection: 'rtl',
     marginBottom: 16,
-    marginTop: -4,
     lineHeight: 18,
   },
   providerRow: {
@@ -245,15 +255,15 @@ const styles = StyleSheet.create({
   },
   chipOn: {
     borderColor: colors.accent,
-    backgroundColor: 'rgba(66,133,244,0.18)',
+    backgroundColor: colors.accent,
   },
-  chipText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
-  chipTextOn: { color: '#bfdbfe' },
+  chipText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
+  chipTextOn: { color: colors.onAccent },
   saveBtn: {
     backgroundColor: colors.accent,
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  saveText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  saveText: { color: colors.onAccent, fontSize: 16, fontWeight: '600' },
 });

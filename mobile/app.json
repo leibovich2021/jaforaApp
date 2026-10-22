@@ -5,18 +5,18 @@
     "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0f1419"
+      "backgroundColor": "#f3f0ea"
     },
     "ios": {
       "supportsTablet": false
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0f1419",
+        "backgroundColor": "#f3f0ea",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "package": "com.jafora.dailyreport",
@@ -47,7 +47,7 @@
         "expo-notifications",
         {
           "defaultChannel": "jafora-reminders",
-          "color": "#4285F4"
+          "color": "#2c4a3e"
         }
       ]
     ],

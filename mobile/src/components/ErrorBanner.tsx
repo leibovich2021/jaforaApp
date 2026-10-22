@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors } from '../theme';
+import { colors, radius, space } from '../theme';
 
 interface Props {
   message: string;
@@ -28,21 +28,31 @@ export function ErrorBanner({ message, onDismiss }: Props) {
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    backgroundColor: 'rgba(239,68,68,0.12)',
+    backgroundColor: colors.errorSoft,
     borderWidth: 1,
-    borderColor: 'rgba(239,68,68,0.45)',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 16,
+    borderColor: colors.errorBorder,
+    borderRadius: radius.md,
+    padding: space.lg,
+    marginBottom: space.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: space.sm,
   },
-  title: { color: '#fecaca', fontSize: 16, fontWeight: '700' },
-  dismiss: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
+  title: {
+    color: colors.error,
+    fontSize: 15,
+    fontWeight: '600',
+    writingDirection: 'rtl',
+  },
+  dismiss: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: '500',
+    writingDirection: 'rtl',
+  },
   scroll: { maxHeight: 180 },
   body: {
     color: colors.text,

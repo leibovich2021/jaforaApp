@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, I18nManager, StatusBar } from 'react-native';
+import { Alert, I18nManager, StatusBar, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { SettingsModal } from './src/components/SettingsModal';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -13,6 +13,7 @@ import { loadSettings, saveSettings } from './src/services/storage';
 import { buildReportText } from './src/utils/report';
 import { prepareImageForGemini } from './src/utils/prepareImage';
 import { openWhatsApp } from './src/utils/whatsapp';
+import { colors } from './src/theme';
 import {
   AppSettings,
   DEFAULT_SETTINGS,
@@ -153,8 +154,8 @@ export default function App() {
   };
 
   return (
-    <>
-      <StatusBar barStyle="light-content" backgroundColor="#0f1419" />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
 
       {screen === 'home' && (
         <HomeScreen
@@ -188,6 +189,6 @@ export default function App() {
         onClose={() => setSettingsOpen(false)}
         onSave={handleSaveSettings}
       />
-    </>
+    </View>
   );
 }
