@@ -1,7 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
@@ -10,7 +12,9 @@ import {
   Platform,
   Keyboard,
 } from 'react-native';
-import { ExtractedReport, TruckTransfers } from '../types';
+import { ErrorBanner } from '../components/ErrorBanner';
+import { collectReportWarnings, dateWarning, inspectBranch, suggestedColumnFix } from '../extraction/sanity';
+import { BranchData, ExtractedReport, TruckTransfers } from '../types';
 import { colors } from '../theme';
 import { fmtAvgBoxes, fmtAvgPoints, fmtInt, withCalculatedAverages, branchHasData } from '../utils/averages';
 import { useKeyboardHeight } from '../utils/keyboard';
@@ -25,18 +29,57 @@ interface Props {
   onChangeRecipient: () => void;
   onRetake: () => void;
   onNewForm: () => void;
+  sourceLabel: string;
+  onChangeData: (data: ExtractedReport) => void;
+  error?: string | null;
+  onDismissError?: () => void;
+}
+
+function NumberField({
+  value,
+  warned,
+  onChange,
+}: {
+  value: number;
+  warned: boolean;
+  onChange: (value: number) => void;
+}) {
+  const [text, setText] = useState(String(value));
+
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+
+  return (
+    <TextInput
+      value={text}
+      keyboardType="number-pad"
+      selectTextOnFocus
+      maxLength={7}
+      onChangeText={(raw) => {
+        const cleaned = raw.replace(/[^\d]/g, '');
+        setText(cleaned);
+        onChange(cleaned ? Number(cleaned) : 0);
+      }}
+      style={[styles.statInput, warned && styles.statInputWarn]}
+    />
+  );
 }
 
 function BranchCard({
   title,
   headerColor,
   data,
+  onChange,
 }: {
   title: string;
   headerColor: string;
-  data: { boxes: number; points: number; trucks: number };
+  data: BranchData;
+  onChange: (data: BranchData) => void;
 }) {
-  const avg = withCalculatedAverages({ ...data, avgBoxes: 0, avgPoints: 0 });
+  const avg = withCalculatedAverages(data);
+  const flags = inspectBranch(data);
+  const fix = suggestedColumnFix(data);
   return (
     <View style={styles.branchCard}>
       <View style={[styles.branchHeader, { backgroundColor: headerColor }]}>
@@ -44,18 +87,43 @@ function BranchCard({
       </View>
       <View style={styles.statsRow}>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{fmtInt(data.boxes)}</Text>
-          <Text style={styles.statLabel}>תיבות</Text>
+          <NumberField
+            value={data.trucks}
+            warned={flags.trucks}
+            onChange={(trucks) => onChange({ ...data, trucks, avgBoxes: 0, avgPoints: 0 })}
+          />
+          <Text style={styles.statLabel}>משאיות</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{fmtInt(data.points)}</Text>
+          <NumberField
+            value={data.points}
+            warned={flags.points}
+            onChange={(points) => onChange({ ...data, points, avgBoxes: 0, avgPoints: 0 })}
+          />
           <Text style={styles.statLabel}>נקודות</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{fmtInt(data.trucks)}</Text>
-          <Text style={styles.statLabel}>משאיות</Text>
+          <NumberField
+            value={data.boxes}
+            warned={flags.boxes}
+            onChange={(boxes) => onChange({ ...data, boxes, avgBoxes: 0, avgPoints: 0 })}
+          />
+          <Text style={styles.statLabel}>תיבות</Text>
         </View>
       </View>
+      {flags.messages.map((message) => (
+        <Text key={message} style={styles.branchWarn}>{message}</Text>
+      ))}
+      {fix && (
+        <TouchableOpacity
+          style={styles.fixBtn}
+          onPress={() => onChange(fix)}
+        >
+          <Text style={styles.fixText}>
+            תקן לפי הגודל: {fmtInt(fix.trucks)} משאיות · {fmtInt(fix.points)} נקודות · {fmtInt(fix.boxes)} תיבות
+          </Text>
+        </TouchableOpacity>
+      )}
       <View style={styles.avgRow}>
         <Text style={styles.avgText}>
           ממוצע לנהג: {fmtAvgBoxes(avg.avgBoxes)} תיבות · {fmtAvgPoints(avg.avgPoints)} נקודות
@@ -107,14 +175,38 @@ export function ReviewScreen({
   onChangeRecipient,
   onRetake,
   onNewForm,
+  sourceLabel,
+  onChangeData,
+  error,
+  onDismissError,
 }: Props) {
   const kbHeight = useKeyboardHeight();
   const scrollRef = useRef<ScrollView>(null);
-
+  const warnings = collectReportWarnings(data);
+  const badDate = dateWarning(data.date);
   const bashNote = buildBashNote(transfers);
   const tzraNote = buildTzraNote(transfers);
   const hasTzra = branchHasData(data.tzora);
   const hasBash = branchHasData(data.beerSheva);
+
+  const updateBranch = (key: 'beerSheva' | 'tzora', branch: BranchData) => {
+    onChangeData({ ...data, [key]: branch });
+  };
+
+  const handleSend = () => {
+    if (!hasTzra && !hasBash) {
+      Alert.alert('אין נתונים', 'מלא לפחות סניף אחד לפני השליחה');
+      return;
+    }
+    if (warnings.length > 0) {
+      Alert.alert('המספרים נראים חשודים', 'כדאי לתקן לפני השליחה. אפשר גם לשלוח כמו שהם.', [
+        { text: 'חזרה לתיקון', style: 'cancel' },
+        { text: 'שלח בכל זאת', onPress: onSendWhatsApp },
+      ]);
+      return;
+    }
+    onSendWhatsApp();
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -139,24 +231,43 @@ export function ReviewScreen({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.dateBadge}>
-            <Text style={styles.dateText}>📅 {data.date} · {data.dayName}</Text>
-          </View>
+          {error ? <ErrorBanner message={error} onDismiss={onDismissError ?? (() => {})} /> : null}
 
-          {hasTzra && (
-            <BranchCard
-              title="צרעה"
-              headerColor="rgba(139,92,246,0.2)"
-              data={data.tzora}
+          <Text style={styles.hint}>אפשר לתקן כל מספר לפני השליחה. הסדר בגיליון: מימין לתאריך משאיות, אחר כך נקודות, אחר כך תיבות.</Text>
+          <Text style={styles.sourceLabel}>נקרא באמצעות {sourceLabel}</Text>
+
+          <View style={styles.dateBadge}>
+            <TextInput
+              style={[styles.dateInput, badDate && styles.statInputWarn]}
+              value={data.date}
+              onChangeText={(date) => onChangeData({ ...data, date })}
+              textAlign="center"
+              placeholder="DD/MM/YYYY"
+              placeholderTextColor={colors.textMuted}
             />
-          )}
-          {hasBash && (
-            <BranchCard
-              title="באר שבע"
-              headerColor="rgba(59,130,246,0.2)"
-              data={data.beerSheva}
+            <TextInput
+              style={styles.dateInput}
+              value={data.dayName}
+              onChangeText={(dayName) => onChangeData({ ...data, dayName })}
+              textAlign="center"
+              placeholder="יום"
+              placeholderTextColor={colors.textMuted}
             />
-          )}
+          </View>
+          {badDate ? <Text style={styles.dateWarn}>{badDate}</Text> : null}
+
+          <BranchCard
+            title="צרעה"
+            headerColor="rgba(139,92,246,0.2)"
+            data={data.tzora}
+            onChange={(branch) => updateBranch('tzora', branch)}
+          />
+          <BranchCard
+            title="באר שבע"
+            headerColor="rgba(59,130,246,0.2)"
+            data={data.beerSheva}
+            onChange={(branch) => updateBranch('beerSheva', branch)}
+          />
 
           <Text style={styles.sectionTitle}>🚛 העברות משאיות</Text>
           <View style={styles.transferForm}>
@@ -219,7 +330,7 @@ export function ReviewScreen({
             <Text style={styles.recipientLabel}>👤 נמען: </Text>
           </View>
 
-          <TouchableOpacity style={styles.whatsappBtn} onPress={onSendWhatsApp}>
+          <TouchableOpacity style={styles.whatsappBtn} onPress={handleSend}>
             <Text style={styles.whatsappText}>📲 שלח ל{managerName} בוואטסאפ</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.newFormBtn} onPress={onNewForm}>
@@ -244,6 +355,7 @@ const styles = StyleSheet.create({
   heading: { fontSize: 20, fontWeight: '700', color: colors.text },
   retakeLink: { color: colors.accent, fontSize: 14, fontWeight: '600' },
   dateBadge: {
+    flexDirection: 'row',
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -251,8 +363,71 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     alignItems: 'center',
+    gap: 8,
   },
   dateText: { color: colors.text, fontSize: 14 },
+  dateInput: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    borderRadius: 8,
+  },
+  dateWarn: {
+    color: '#fecaca',
+    fontSize: 12,
+    textAlign: 'right',
+    marginTop: -10,
+    marginBottom: 12,
+  },
+  hint: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 20,
+    textAlign: 'right',
+    marginBottom: 6,
+  },
+  sourceLabel: {
+    color: '#93c5fd',
+    fontSize: 12,
+    textAlign: 'right',
+    marginBottom: 10,
+  },
+  statInput: {
+    minWidth: 72,
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  statInputWarn: { borderColor: colors.error },
+  branchWarn: {
+    color: '#fecaca',
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'right',
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+  },
+  fixBtn: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(66,133,244,0.45)',
+    backgroundColor: 'rgba(66,133,244,0.12)',
+    padding: 10,
+  },
+  fixText: { color: '#bfdbfe', fontSize: 13, textAlign: 'right', lineHeight: 18 },
   branchCard: {
     backgroundColor: colors.surface,
     borderRadius: 16,

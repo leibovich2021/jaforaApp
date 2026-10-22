@@ -5,7 +5,9 @@ import { SettingsModal } from './src/components/SettingsModal';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { LoadingScreen } from './src/screens/LoadingScreen';
 import { ReviewScreen } from './src/screens/ReviewScreen';
-import { extractReportFromImage } from './src/services/gemini';
+import { cleanApiKey } from './src/extraction/apiError';
+import { hasVisionKey } from './src/extraction/plan';
+import { extractReportFromImage } from './src/services/extractReport';
 import { setupDailyReminder } from './src/services/reminder';
 import { loadSettings, saveSettings } from './src/services/storage';
 import { buildReportText } from './src/utils/report';
@@ -41,6 +43,9 @@ export default function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [extracted, setExtracted] = useState<ExtractedReport | null>(null);
+  const [providerLabel, setProviderLabel] = useState('');
+  const [readError, setReadError] = useState<string | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState('קורא את האקסל...');
   const [transfers, setTransfers] = useState<TruckTransfers>(DEFAULT_TRANSFERS);
 
   useEffect(() => {
@@ -49,34 +54,49 @@ export default function App() {
   }, []);
 
   const handleSaveSettings = async (next: AppSettings) => {
-    setSettings(next);
-    await saveSettings(next);
+    const cleaned: AppSettings = {
+      ...next,
+      managerName: next.managerName.trim() || DEFAULT_SETTINGS.managerName,
+      managerPhone: next.managerPhone.trim(),
+      geminiApiKey: cleanApiKey(next.geminiApiKey),
+      openaiApiKey: cleanApiKey(next.openaiApiKey),
+      anthropicApiKey: cleanApiKey(next.anthropicApiKey),
+      visionProvider: next.visionProvider || 'auto',
+    };
+    setSettings(cleaned);
+    await saveSettings(cleaned);
     setSettingsOpen(false);
   };
 
   const processImage = useCallback(
     async (uri: string) => {
+      setReadError(null);
+      setLoadingMessage('מכין את התמונה…');
       setScreen('loading');
       try {
         const { base64, mimeType } = await prepareImageForGemini(uri);
-        const data = await extractReportFromImage(base64, mimeType, settings.geminiApiKey);
-        setExtracted(data);
+        const { report, providerLabel: source } = await extractReportFromImage(
+          base64,
+          mimeType,
+          settings,
+          setLoadingMessage,
+        );
+        setExtracted(report);
+        setProviderLabel(source);
         setTransfers(DEFAULT_TRANSFERS);
         setScreen('review');
       } catch (err) {
         const message = err instanceof Error ? err.message : 'שגיאה לא צפויה';
-        Alert.alert('שגיאה', message, [
-          { text: 'נסה שוב', onPress: () => openCamera() },
-          { text: 'ביטול', style: 'cancel', onPress: () => setScreen('home') },
-        ]);
+        setReadError(message);
+        setScreen(extracted ? 'review' : 'home');
       }
     },
-    [settings.geminiApiKey],
+    [settings, extracted],
   );
 
   const openCamera = async () => {
-    if (!settings.geminiApiKey.trim()) {
-      Alert.alert('חסר מפתח API', 'הוסף מפתח Gemini בהגדרות לפני הצילום', [
+    if (!hasVisionKey(settings)) {
+      Alert.alert('חסר מפתח API', 'הוסף מפתח Gemini בהגדרות לפני הצילום. אפשר גם להוסיף מפתח OpenAI או Claude כגיבוי.', [
         { text: 'פתח הגדרות', onPress: () => setSettingsOpen(true) },
         { text: 'ביטול', style: 'cancel' },
       ]);
@@ -126,6 +146,8 @@ export default function App() {
 
   const handleNewForm = () => {
     setExtracted(null);
+    setProviderLabel('');
+    setReadError(null);
     setTransfers(DEFAULT_TRANSFERS);
     setScreen('home');
   };
@@ -135,19 +157,28 @@ export default function App() {
       <StatusBar barStyle="light-content" backgroundColor="#0f1419" />
 
       {screen === 'home' && (
-        <HomeScreen onCapture={openCamera} onOpenSettings={() => setSettingsOpen(true)} />
+        <HomeScreen
+          onCapture={openCamera}
+          onOpenSettings={() => setSettingsOpen(true)}
+          error={readError}
+          onDismissError={() => setReadError(null)}
+        />
       )}
-      {screen === 'loading' && <LoadingScreen />}
+      {screen === 'loading' && <LoadingScreen message={loadingMessage} />}
       {screen === 'review' && extracted && (
         <ReviewScreen
           data={extracted}
           transfers={transfers}
           managerName={settings.managerName}
+          sourceLabel={providerLabel}
+          onChangeData={setExtracted}
           onChangeTransfers={setTransfers}
           onSendWhatsApp={handleSendWhatsApp}
           onChangeRecipient={() => setSettingsOpen(true)}
           onRetake={openCamera}
           onNewForm={handleNewForm}
+          error={readError}
+          onDismissError={() => setReadError(null)}
         />
       )}
 
