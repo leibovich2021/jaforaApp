@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, SafeAreaView } from 'react-native';
-import { colors } from '../theme';
+import { colors, space } from '../theme';
 
 interface Props {
   message?: string;
@@ -10,8 +10,8 @@ export function LoadingScreen({ message = 'קורא את האקסל...' }: Props
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.content}>
-        <ActivityIndicator size="large" color={colors.accent} />
-        <Text style={styles.title}>{message}</Text>
+        <ActivityIndicator size="small" color={colors.accent} />
+        <Text style={styles.title}>{`\u202B${message}\u202C`}</Text>
         <Text style={styles.subtitle}>קוראים את העמודות מימין לתאריך: משאיות, נקודות, תיבות</Text>
       </View>
     </SafeAreaView>
@@ -24,19 +24,25 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: space.xl,
   },
   title: {
     fontSize: 20,
+    lineHeight: 28,
     fontWeight: '600',
     color: colors.text,
-    marginTop: 24,
+    marginTop: space.lg,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    direction: 'rtl',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textMuted,
-    marginTop: 8,
+    marginTop: space.sm,
     textAlign: 'center',
     lineHeight: 22,
+    writingDirection: 'rtl',
+    maxWidth: 280,
   },
 });

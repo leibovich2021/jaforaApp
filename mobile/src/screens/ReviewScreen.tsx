@@ -15,7 +15,7 @@ import {
 import { ErrorBanner } from '../components/ErrorBanner';
 import { collectReportWarnings, dateWarning, inspectBranch, suggestedColumnFix } from '../extraction/sanity';
 import { BranchData, ExtractedReport, TruckTransfers } from '../types';
-import { colors } from '../theme';
+import { colors, radius, space } from '../theme';
 import { fmtAvgBoxes, fmtAvgPoints, fmtInt, withCalculatedAverages, branchHasData } from '../utils/averages';
 import { useKeyboardHeight } from '../utils/keyboard';
 import { buildBashNote, buildTzraNote, formatTrucksLine } from '../utils/truckNotes';
@@ -62,6 +62,7 @@ function NumberField({
         onChange(cleaned ? Number(cleaned) : 0);
       }}
       style={[styles.statInput, warned && styles.statInputWarn]}
+      textAlign="center"
     />
   );
 }
@@ -144,6 +145,7 @@ function TransferStepper({
 }) {
   return (
     <View style={styles.transferRow}>
+      <Text style={styles.transferLabel}>{label}</Text>
       <View style={styles.stepper}>
         <TouchableOpacity
           style={styles.stepBtn}
@@ -161,7 +163,6 @@ function TransferStepper({
           <Text style={styles.stepBtnText}>−</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.transferLabel}>{label}</Text>
     </View>
   );
 }
@@ -225,20 +226,20 @@ export function ReviewScreen({
           onScrollBeginDrag={Keyboard.dismiss}
         >
           <View style={styles.topRow}>
-            <Text style={styles.heading}>📊 סיכום ושליחה</Text>
+            <Text style={styles.heading}>סיכום ושליחה</Text>
             <TouchableOpacity onPress={onRetake}>
-              <Text style={styles.retakeLink}>📷 צלם שוב</Text>
+              <Text style={styles.retakeLink}>צלם שוב</Text>
             </TouchableOpacity>
           </View>
 
           {error ? <ErrorBanner message={error} onDismiss={onDismissError ?? (() => {})} /> : null}
 
           <Text style={styles.hint}>אפשר לתקן כל מספר לפני השליחה. הסדר בגיליון: מימין לתאריך משאיות, אחר כך נקודות, אחר כך תיבות.</Text>
-          <Text style={styles.sourceLabel}>נקרא באמצעות {sourceLabel}</Text>
+          <Text style={styles.sourceLabel}>{`\u202Bנקרא באמצעות ${sourceLabel}\u202C`}</Text>
 
           <View style={styles.dateBadge}>
             <TextInput
-              style={[styles.dateInput, badDate && styles.statInputWarn]}
+              style={[styles.dateInput, styles.dateField, badDate && styles.statInputWarn]}
               value={data.date}
               onChangeText={(date) => onChangeData({ ...data, date })}
               textAlign="center"
@@ -246,7 +247,7 @@ export function ReviewScreen({
               placeholderTextColor={colors.textMuted}
             />
             <TextInput
-              style={styles.dateInput}
+              style={[styles.dateInput, styles.dayField]}
               value={data.dayName}
               onChangeText={(dayName) => onChangeData({ ...data, dayName })}
               textAlign="center"
@@ -258,18 +259,18 @@ export function ReviewScreen({
 
           <BranchCard
             title="צרעה"
-            headerColor="rgba(139,92,246,0.2)"
+            headerColor={colors.tzraSoft}
             data={data.tzora}
             onChange={(branch) => updateBranch('tzora', branch)}
           />
           <BranchCard
             title="באר שבע"
-            headerColor="rgba(59,130,246,0.2)"
+            headerColor={colors.bashSoft}
             data={data.beerSheva}
             onChange={(branch) => updateBranch('beerSheva', branch)}
           />
 
-          <Text style={styles.sectionTitle}>🚛 העברות משאיות</Text>
+          <Text style={styles.sectionTitle}>העברות משאיות</Text>
           <View style={styles.transferForm}>
             {hasTzra && (
               <>
@@ -323,18 +324,18 @@ export function ReviewScreen({
           </View>
 
           <View style={styles.recipientRow}>
+            <Text style={styles.recipientLabel}>נמען</Text>
+            <Text style={styles.recipientName}>{managerName}</Text>
             <TouchableOpacity onPress={onChangeRecipient}>
               <Text style={styles.changeLink}>החלף</Text>
             </TouchableOpacity>
-            <Text style={styles.recipientName}>{managerName}</Text>
-            <Text style={styles.recipientLabel}>👤 נמען: </Text>
           </View>
 
           <TouchableOpacity style={styles.whatsappBtn} onPress={handleSend}>
-            <Text style={styles.whatsappText}>📲 שלח ל{managerName} בוואטסאפ</Text>
+            <Text style={styles.whatsappText}>שלח ל{managerName} בוואטסאפ</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.newFormBtn} onPress={onNewForm}>
-            <Text style={styles.newFormText}>📋 טופס חדש</Text>
+            <Text style={styles.newFormText}>טופס חדש</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -345,157 +346,207 @@ export function ReviewScreen({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   flex: { flex: 1 },
-  scroll: { padding: 16, paddingBottom: 40 },
+  scroll: { paddingHorizontal: space.lg, paddingTop: space.lg, paddingBottom: 40 },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: space.lg,
   },
-  heading: { fontSize: 20, fontWeight: '700', color: colors.text },
-  retakeLink: { color: colors.accent, fontSize: 14, fontWeight: '600' },
+  heading: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: colors.text,
+    writingDirection: 'rtl',
+  },
+  retakeLink: {
+    color: colors.accent,
+    fontSize: 15,
+    fontWeight: '500',
+    writingDirection: 'rtl',
+  },
   dateBadge: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    marginBottom: space.lg,
     alignItems: 'center',
-    gap: 8,
+    gap: space.sm,
   },
-  dateText: { color: colors.text, fontSize: 14 },
+  dateText: { color: colors.text, fontSize: 15 },
   dateInput: {
-    flex: 1,
     color: colors.text,
     fontSize: 16,
-    fontWeight: '700',
-    paddingVertical: 6,
+    fontWeight: '600',
+    paddingVertical: 8,
     borderWidth: 1,
     borderColor: 'transparent',
-    borderRadius: 8,
+    borderRadius: radius.sm,
+    textAlign: 'center',
   },
+  dateField: { flex: 1.2, minWidth: 0, writingDirection: 'ltr' },
+  dayField: { flex: 1, minWidth: 0, writingDirection: 'rtl' },
   dateWarn: {
-    color: '#fecaca',
+    color: colors.error,
     fontSize: 12,
+    lineHeight: 18,
     textAlign: 'right',
-    marginTop: -10,
-    marginBottom: 12,
+    writingDirection: 'rtl',
+    marginTop: -space.sm,
+    marginBottom: space.md,
   },
   hint: {
     color: colors.textMuted,
     fontSize: 13,
     lineHeight: 20,
     textAlign: 'right',
-    marginBottom: 6,
+    writingDirection: 'rtl',
+    marginBottom: space.xs,
   },
   sourceLabel: {
-    color: '#93c5fd',
+    color: colors.tzra,
     fontSize: 12,
     textAlign: 'right',
-    marginBottom: 10,
+    writingDirection: 'rtl',
+    marginBottom: space.md,
   },
   statInput: {
-    minWidth: 72,
+    width: '100%',
+    height: 44,
     color: colors.text,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     textAlign: 'center',
+    writingDirection: 'ltr',
     backgroundColor: colors.bg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    borderRadius: radius.sm,
+    paddingVertical: 0,
+    paddingHorizontal: 4,
   },
-  statInputWarn: { borderColor: colors.error },
+  statInputWarn: { borderColor: colors.error, backgroundColor: colors.errorSoft },
   branchWarn: {
-    color: '#fecaca',
+    color: colors.error,
     fontSize: 12,
     lineHeight: 18,
     textAlign: 'right',
-    paddingHorizontal: 16,
-    paddingBottom: 6,
+    writingDirection: 'rtl',
+    paddingHorizontal: space.lg,
+    paddingBottom: space.sm,
   },
   fixBtn: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(66,133,244,0.45)',
-    backgroundColor: 'rgba(66,133,244,0.12)',
-    padding: 10,
+    marginHorizontal: space.lg,
+    marginBottom: space.md,
+    borderRadius: radius.sm,
+    backgroundColor: colors.accentSoft,
+    padding: space.md,
   },
-  fixText: { color: '#bfdbfe', fontSize: 13, textAlign: 'right', lineHeight: 18 },
+  fixText: {
+    color: colors.accent,
+    fontSize: 13,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+    lineHeight: 18,
+  },
   branchCard: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: space.md,
   },
-  branchHeader: { paddingVertical: 10, paddingHorizontal: 16 },
-  branchTitle: { fontSize: 16, fontWeight: '700', color: colors.text },
-  statsRow: { flexDirection: 'row', padding: 16 },
-  stat: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: 18, fontWeight: '700', color: colors.text },
-  statLabel: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  branchHeader: { paddingVertical: space.md, paddingHorizontal: space.lg },
+  branchTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  statsRow: { flexDirection: 'row', paddingHorizontal: space.md, paddingBottom: space.lg, gap: space.sm },
+  stat: { flex: 1, minWidth: 0, alignItems: 'stretch' },
+  statValue: { fontSize: 18, fontWeight: '600', color: colors.text },
+  statLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: space.sm,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+  },
   avgRow: {
     backgroundColor: colors.bg,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    padding: 10,
-    paddingHorizontal: 16,
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
   },
-  avgText: { fontSize: 13, color: colors.textMuted, textAlign: 'right' },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: 8,
-    marginBottom: 12,
+  avgText: {
+    fontSize: 13,
+    color: colors.textMuted,
     textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: space.sm,
+    marginBottom: space.md,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   transferForm: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: space.lg,
   },
   groupLabel: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 6,
+    paddingHorizontal: space.lg,
+    paddingTop: space.md,
+    paddingBottom: space.sm,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.textMuted,
     backgroundColor: colors.bg,
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   transferRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    gap: space.md,
   },
-  transferLabel: { flex: 1, fontSize: 14, color: colors.text, textAlign: 'right' },
+  transferLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginLeft: 12,
+    direction: 'ltr',
+    gap: space.xs,
   },
   stepBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
     backgroundColor: colors.bg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -503,48 +554,83 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepBtnText: {
-    fontSize: 22,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '500',
     color: colors.accent,
-    lineHeight: 26,
+    lineHeight: 24,
   },
   stepValue: {
-    minWidth: 36,
+    minWidth: 28,
     textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: colors.text,
-    paddingHorizontal: 4,
   },
   notesPreview: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
-    marginBottom: 20,
+    padding: space.lg,
+    marginBottom: space.lg,
   },
-  notesTitle: { fontSize: 12, color: colors.textMuted, marginBottom: 8, textAlign: 'right' },
-  notesText: { fontSize: 14, color: '#93c5fd', lineHeight: 22, textAlign: 'right' },
-  notesBold: { fontWeight: '700', color: '#93c5fd' },
+  notesTitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: space.sm,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  notesText: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 24,
+    textAlign: 'right',
+    writingDirection: 'rtl',
+  },
+  notesBold: { fontWeight: '600', color: colors.text },
   recipientRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginBottom: 12,
-    gap: 6,
+    justifyContent: 'flex-start',
+    marginBottom: space.md,
+    gap: space.sm,
   },
-  recipientLabel: { fontSize: 14, color: colors.textMuted },
-  recipientName: { fontSize: 14, fontWeight: '700', color: colors.text },
-  changeLink: { color: colors.accent, fontSize: 14, fontWeight: '600', marginLeft: 8 },
+  recipientLabel: {
+    fontSize: 14,
+    color: colors.textMuted,
+    writingDirection: 'rtl',
+  },
+  recipientName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    writingDirection: 'rtl',
+  },
+  changeLink: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: '500',
+    writingDirection: 'rtl',
+  },
   whatsappBtn: {
     backgroundColor: colors.whatsapp,
-    borderRadius: 14,
-    padding: 18,
+    borderRadius: radius.md,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: space.sm,
   },
-  whatsappText: { color: '#fff', fontSize: 17, fontWeight: '700' },
-  newFormBtn: { padding: 14, alignItems: 'center', marginBottom: 8 },
-  newFormText: { color: colors.textMuted, fontSize: 15, fontWeight: '600' },
+  whatsappText: {
+    color: colors.onAccent,
+    fontSize: 16,
+    fontWeight: '600',
+    writingDirection: 'rtl',
+  },
+  newFormBtn: { paddingVertical: space.md, alignItems: 'center', marginBottom: space.sm },
+  newFormText: {
+    color: colors.textMuted,
+    fontSize: 15,
+    fontWeight: '500',
+    writingDirection: 'rtl',
+  },
 });

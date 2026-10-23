@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   recipientRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
     marginVertical: 16,
     gap: 6,
   },
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  whatsappText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  whatsappText: { color: colors.onAccent, fontSize: 16, fontWeight: '600' },
   secondaryBtn: {
     backgroundColor: colors.surface2,
     borderRadius: 14,

@@ -23,7 +23,7 @@ async function ensureAndroidChannel() {
     name: 'תזכורות יומיות',
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
-    lightColor: '#4285F4',
+    lightColor: '#2c4a3e',
   });
 }
 
