@@ -54,9 +54,11 @@ ${fmtAvgPoints(avg.avgPoints)} נקודות`;
 function buildSummaryBlock(branches: Array<BranchData | null | undefined>): string {
   const trucks = branches.reduce((sum, branch) => sum + countOf(branch, 'trucks'), 0);
   const boxes = branches.reduce((sum, branch) => sum + countOf(branch, 'boxes'), 0);
+  const points = branches.reduce((sum, branch) => sum + countOf(branch, 'points'), 0);
   return `סיכום שני הסניפים:
 סה"כ משאיות: ${fmtInt(trucks)}
-סה"כ תיבות: ${fmtInt(boxes)}`;
+סה"כ תיבות: ${fmtInt(boxes)}
+סה"כ נקודות: ${fmtInt(points)}`;
 }
 
 export function buildReportText(

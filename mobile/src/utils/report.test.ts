@@ -28,7 +28,7 @@ const bothBranches: ExtractedReport = {
   beerSheva: branch({ trucks: 14, points: 153, boxes: 17151 }),
 };
 
-test('report ends with a total of trucks and boxes across both branches', () => {
+test('report ends with totals of trucks, boxes, and points across both branches', () => {
   const text = buildReportText(bothBranches, transfers, 'לוזיק');
 
   assert.ok(text.startsWith('שלום לוזיק'));
@@ -39,7 +39,8 @@ test('report ends with a total of trucks and boxes across both branches', () => 
   assert.equal(text.split('━━━━━━━━━━━━━━━━━━━━━━').length - 1, 2);
   assert.ok(text.endsWith(`סיכום שני הסניפים:
 סה"כ משאיות: 26
-סה"כ תיבות: 29,151`));
+סה"כ תיבות: 29,151
+סה"כ נקודות: 273`));
 });
 
 test('a single-branch day sums only the branch that has numbers', () => {
@@ -53,7 +54,8 @@ test('a single-branch day sums only the branch that has numbers', () => {
   assert.equal(text.split('━━━━━━━━━━━━━━━━━━━━━━').length - 1, 1);
   assert.ok(text.endsWith(`סיכום שני הסניפים:
 סה"כ משאיות: 14
-סה"כ תיבות: 17,151`));
+סה"כ תיבות: 17,151
+סה"כ נקודות: 153`));
 });
 
 test('missing branches and non-numeric counts are treated as zero', () => {
@@ -70,18 +72,20 @@ test('missing branches and non-numeric counts are treated as zero', () => {
   assert.ok(text.includes('17,151 תיבות'));
   assert.ok(text.endsWith(`סיכום שני הסניפים:
 סה"כ משאיות: 14
-סה"כ תיבות: 17,151`));
+סה"כ תיבות: 17,151
+סה"כ נקודות: 0`));
 
   const garbage = {
     date: '23/06/2026',
     dayName: '',
     beerSheva: { trucks: 'לא מספר', points: 'x', boxes: undefined },
-    tzora: { trucks: 3, points: 10, boxes: 400 },
+    tzora: { trucks: 3, points: '1,200', boxes: 400 },
   } as unknown as ExtractedReport;
 
   const summed = buildReportText(garbage, transfers, 'לוזיק');
   assert.equal(summed.includes('סניף באר שבע'), false);
   assert.ok(summed.endsWith(`סיכום שני הסניפים:
 סה"כ משאיות: 3
-סה"כ תיבות: 400`));
+סה"כ תיבות: 400
+סה"כ נקודות: 1,200`));
 });
