@@ -25,7 +25,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:apk": "eas build --platform android --profile preview",
-    "test": "tsx --test src/extraction/*.test.ts"
+    "test": "tsx --test src/extraction/*.test.ts src/utils/*.test.ts"
   },
   "private": true
 }
